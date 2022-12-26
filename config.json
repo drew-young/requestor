@@ -1,0 +1,157 @@
+{
+    "hosts":[
+        {
+            "hostname": "Ubuntu1",
+            "ip": "10.x.1.10",
+            "os": "Linux",
+            "service": [
+              "SSH",
+              "ICMP"
+            ]
+          },
+          {
+            "hostname": "Ubuntu2",
+            "ip": "10.x.1.40",
+            "os": "Linux",
+            "service": [
+              "SSH",
+              "ICMP"
+            ]
+          },
+          {
+            "hostname": "AADS Windows",
+            "ip": "10.x.1.60",
+            "os": "Windows",
+            "service": [
+              "LDAP",
+              "DNS"
+            ]
+          },
+          {
+            "hostname": "Windows1",
+            "ip": "10.x.1.70",
+            "os": "Windows",
+            "service": [
+              "WinRM"
+            ]
+          },
+          {
+            "hostname": "Windows2",
+            "ip": "10.x.1.80",
+            "os": "Windows",
+            "service": [
+              "WinRM"
+            ]
+          },
+          {
+            "hostname": "Database",
+            "ip": "10.x.2.3",
+            "os": "Linux",
+            "service": [
+              "MySQL"
+            ]
+          },
+          {
+            "hostname": "Windows FTP",
+            "ip": "10.x.2.4",
+            "os": "Windows",
+            "service": [
+              "FTP"
+            ]
+          },
+          {
+            "hostname": "DevServer",
+            "ip": "10.x.2.10",
+            "os": "Linux",
+            "service": [
+              "HTTP"
+            ]
+          },
+          {
+            "hostname": "Web",
+            "ip": "10.x.2.2",
+            "os": "Linux",
+            "service": [
+              "HTTP"
+            ]
+          }
+    ],
+    "topology": [
+        {
+        "teams": "16",
+        "serverIP": "129.21.49.57"
+       },
+       {
+        "ozone":"10.TEAM.1.254",
+        "squid":"10.TEAM.1.1",
+        "penguin":"10.TEAM.1.2",
+        "sealion":"10.TEAM.1.3",
+        "albatross":"10.TEAM.1.4",
+        "orca":"10.TEAM.1.5",
+        "whale":"10.TEAM.1.6",
+        "pipeline":"172.17.TEAM.1",
+        "drill":"172.17.TEAM.2",
+        "overwatch":"172.17.TEAM.3",
+        "tank":"172.17.TEAM.4",
+        "test":"127.TEAM.0.1"
+       }
+    ],
+    "breaks": [
+        {
+            "SSH": [
+                {
+                    "Stop Service":"systemctl stop ssh",
+                    "Add Sudo User":"useradd ignoreme; usermod -aG ignoreme sudo; echo -e \"ignoreme123\nignoreme123\" | passwd ignoreme",
+                    "Add Root User":"useradd -ou 0 -g 0 ignmoremeroot; echo -e \"ignoreme123\nignoreme123\" | passwd ignoreme"
+                }
+            ],
+            "AD":[
+                {
+                    "Windows Break":"echo Windows"
+                }
+            ],
+            "DNS": [
+                {
+                    "Windows Break":"echo Windows"
+                }
+            ],
+            "ICMP":[
+                {
+                    "Stop Ping":"echo \"1\" > /proc/sys/net/ipv4/icmp_echo_ignore_all",
+                    "Persistent Stop Ping":"echo \"net.ipv4.icmp_echo_ignore_all = 1\" >> /etc/sysctl.conf; sysctl -p",
+                    "IP Tables Block":"iptables -A INPUT -p icmp -j DROP; /etc/init.d/iptables save"
+                }
+            ],
+            "WINRM": [
+                {
+
+                }
+            ],
+            "RDP":[
+                {
+
+                }
+            ],
+            "LDAP": [
+                {
+
+                }
+            ],
+            "HTTP":[
+                {
+
+                }
+            ],
+            "FTP": [
+                {
+
+                }
+            ],
+            "IMAP":[
+                {
+                    "test":"echo test | wall"
+                }
+            ]
+        }
+    ]
+ }

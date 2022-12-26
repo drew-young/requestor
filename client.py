@@ -47,7 +47,7 @@ def runCommand(server_ip, host_id, command):
 
 def main():
     SERVER_IP = "127.0.0.1"
-    IP = "10.1.1.10"
+    IP = "10.1.1.100"
     OS = platform.system()
     host_id = initHost(SERVER_IP,IP,OS) #init host 
     commands = getCommands(SERVER_IP,host_id)

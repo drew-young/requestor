@@ -11,6 +11,7 @@ class Host:
         self.addCommand('whoami')
         self.addCommand('pwd')
         self.alive = alive
+        self.lastCheckIn = ""
     
     def __repr__(self):
         return self.id

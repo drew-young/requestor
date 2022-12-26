@@ -7,12 +7,19 @@
 #TODO Accept CLI input (API)
 
 from flask import Flask, request
-import requests
 import json
 import threading
 from serverDependencies.Host import Host
 from serverDependencies.Team import Team
 from serverDependencies.Hostname import Hostname
+from datetime import datetime
+
+"""
+Disable logging for flask.
+"""
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 app = Flask(__name__) #Main webpage object
 
@@ -58,28 +65,42 @@ def getResponse(identifier):
     print(f"[SERVER] Host ({identifier}) - {cmd_id}: {response}")
     return f"{identifier} - Thanks!"
 
+@app.route("/hosts/<identifier>/checkIn",methods=["GET"])
+def checkInPage(identifier):
+    """
+    Runs the check-in function for the host that is checking in.
+    """
+    checkIn(identifier)
+    print("Successful check-in for host: " + identifier)
+    return "Success!"
+
 @app.route("/hosts/newHost", methods=["POST"])
 def newHost():
     """
     Takes in data from a POST request and returns an identifier.
     """
+    global UNKNOWN_COUNT
     data = request.get_json()
     IP = data["IP"]
     OS = data["OS"]
     hostname,team = getInfoByIP(IP)
-    expectedHostname = hostname + "." + team
-    if expectedHostname in HOSTS:
-        return f"{expectedHostname}"
-    host = Host(IP,OS,hostname,team)
-    if hostname != "unknown":
-        HOSTNAMES[hostname].activeHosts.append(host)
-    TEAMS[team].activeHosts.append(host)
-    if hostname == "unknown" and team == "unknown":
-        global UNKNOWN_COUNT
-        UNKNOWN_COUNT += 1
-        host.id += str(UNKNOWN_COUNT)
-    HOSTS[host.id] = host
-    return f"{host.id}"
+    host_id = hostname + "." + team
+    if host_id in HOSTS:
+        checkIn(host_id)
+        return f"{host_id}"
+    if host_id == "unknown.unknown":
+        for i in range(0,UNKNOWN_COUNT+1):
+            temp_id = host_id + str(i)
+            if temp_id in HOSTS:
+                checkIn(temp_id)
+                return f"{temp_id}"
+    UNKNOWN_COUNT += 1
+    newHost = Host(IP,OS,hostname,team)
+    newHost.id += str(UNKNOWN_COUNT)
+    HOSTS[newHost.id] = newHost
+    TEAMS["unknown"].hosts.append(newHost)
+    print(f'[SERVER] Unknown host ({IP} - {OS}) - {newHost.id}')
+    return f"{newHost.id}"
 
 def getInfoByIP(IP):
     for hostname in HOSTNAMES: #Iterate over expected hosts
@@ -126,6 +147,16 @@ def createHost(host):
         HOSTS[newHost.id] = newHost
         print(f"[SERVER] Added host: {newHost} to TEAM {team}")
         print(f"[SERVER] Added host: {newHost} to HOSTNAME {hostname}")
+
+def checkIn(hostname):
+    """
+    Updates host to 'alive' status and updates the last check-in timer.
+
+    :param hostname - Host ID
+    """
+    host = HOSTS[hostname]
+    host.alive = True
+    host.lastCheckIn = datetime.now().strftime("%H:%M:%S")
 
 def main():
     global TEAMS

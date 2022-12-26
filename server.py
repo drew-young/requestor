@@ -66,8 +66,7 @@ def newHost():
     data = request.get_json()
     IP = data["IP"]
     OS = data["OS"]
-    hostname = getHostnameByIP(IP)
-    team = getTeamByIP(IP)
+    hostname,team = getInfoByIP(IP)
     expectedHostname = hostname + "." + team
     if expectedHostname in HOSTS:
         return f"{expectedHostname}"
@@ -82,17 +81,12 @@ def newHost():
     HOSTS[host.id] = host
     return f"{host.id}"
 
-def getHostnameByIP(IP):
-    for host in HOSTNAMES: #Iterate over expected hosts
-        if IP in HOSTNAMES[host].expectedHosts: #If the IP is in the expected clients list, we found the correct host
-            return host
-    return "unknown"
-
-def getTeamByIP(IP):
-    for team in TEAMS:
-        if IP in TEAMS[team].expectedHosts:
-            return team
-    return "unknown"
+def getInfoByIP(IP):
+    for hostname in HOSTNAMES: #Iterate over expected hosts
+        for host in HOSTNAMES[hostname].hosts:
+            if IP == host.ip: #If the IP is in the clients list, we found the correct host
+                return host.hostname, host.team
+    return "unknown","unknown"
     
 def parseConfig():
     """
@@ -102,15 +96,14 @@ def parseConfig():
         with open("config.json") as config:
             config = json.load(config) #Load the config file
         global NUM_OF_TEAMS
-        NUM_OF_TEAMS = int(config["topology"][0]["teams"]) #Pull the # of all teams
+        NUM_OF_TEAMS = int(config["topology"][0]["teams"]) + 1 #Pull the # of all teams
         global SERVER_ADDR
         SERVER_ADDR = config["topology"][0]["serverIP"]
-        for i in range(1,NUM_OF_TEAMS): #Create all teams and give them a list of expected clients
+        for i in range(1,NUM_OF_TEAMS): #Create all teams
             TEAMS[str(i)] = Team(str(i))
-            print("Created team: " + str(i))
+            print("[SERVER] Created team: " + str(i))
         TEAMS["unknown"] = Team("unknown") #unknown team for clients that don't fit config
-        global HOSTNAMES
-        HOSTNAMES = dict()
+        print("[SERVER] Created team: " + "unknown")
         for i in range(len(config["hosts"])):
             currentHost = config["hosts"][i]
             createHost(currentHost)
@@ -123,22 +116,24 @@ def createHost(host):
     hostname = host["hostname"]
     ip = host["ip"]
     os = host["os"]
-    # services = host["service"]
     HOSTNAMES[hostname] = Hostname(hostname,ip,os)
     for i in range(1,NUM_OF_TEAMS):
-        expectedHost = ip.replace("x",str(i))
-        HOSTNAMES[hostname].expectedHosts.append(expectedHost)
-        print(f"[SERVER] Added host: {expectedHost} to HOSTNAME {hostname}")
-    for team in TEAMS:
-        tempIP = ip.replace("x",team)
-        TEAMS[team].expectedHosts.append(tempIP)
-        print(f"[SERVER] Added host: {expectedHost} to TEAM {team}")
+        team = str(i)
+        expectedHostIP = ip.replace("x",team)
+        newHost = Host(expectedHostIP, os, hostname, team)
+        HOSTNAMES[hostname].hosts.append(newHost)
+        TEAMS[team].hosts.append(newHost)
+        HOSTS[newHost.id] = newHost
+        print(f"[SERVER] Added host: {newHost} to TEAM {team}")
+        print(f"[SERVER] Added host: {newHost} to HOSTNAME {hostname}")
 
 def main():
-    global HOSTS
-    HOSTS = dict()
     global TEAMS
     TEAMS = dict()
+    global HOSTNAMES
+    HOSTNAMES = dict()
+    global HOSTS
+    HOSTS = dict()
     parseConfig()
     website = threading.Thread(target=runApp,args=[SERVER_ADDR,"8080"])
     website.daemon = True

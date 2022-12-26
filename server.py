@@ -3,6 +3,7 @@
 #Assign host with hostname and return the identifier of the host
 #Take GET requests on /hosts/IDENTIFIER/commands and return stored commands
 #Take POST requests on /hosts/IDENTIFIER/responses and print responses
+#Take GET requests on /hosts/IDENTIFIER/checkIn to check-in
 
 #TODO Accept CLI input (API)
 

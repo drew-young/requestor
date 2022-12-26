@@ -16,11 +16,11 @@ from serverDependencies.Hostname import Hostname
 
 app = Flask(__name__) #Main webpage object
 
-def runApp():
+def runApp(SERVER_IP,PORT):
     """
     Runs the website on the specified IP and port.
     """
-    app.run(host="127.0.0.1",port="8080")
+    app.run(host=f"{SERVER_IP}",port=f"{PORT}")
 
 @app.route("/") #HOMEPAGE
 def homePage():
@@ -28,7 +28,6 @@ def homePage():
     Returns the homepage at '/'
     """
     return "Homepage of C2"
-
 
 @app.route("/hosts")
 def hostsPage():
@@ -136,13 +135,13 @@ def createHost(host):
         print(f"[SERVER] Added host: {expectedHost} to TEAM {team}")
 
 def main():
-    website = threading.Thread(target=runApp)
-    website.daemon = True
     global HOSTS
     HOSTS = dict()
     global TEAMS
     TEAMS = dict()
     parseConfig()
+    website = threading.Thread(target=runApp,args=[SERVER_ADDR,"8080"])
+    website.daemon = True
     website.start()
     while 1:
         command = input("Enter a command: ")

@@ -168,6 +168,9 @@ def checkIn(hostname):
     host.lastCheckIn = datetime.now().strftime("%H:%M:%S")
 
 def debugPrint(statement):
+    """
+    Prints [SERVER] prefixed message if DEBUG is set to True.
+    """
     if DEBUG:
         print("[SERVER] " + statement)
 

@@ -61,12 +61,11 @@ def getResponse(identifier):
     Accepts a POST request for the client to send responses to
     """
     data = request.data.decode()
-    print(data)
     data = ast.literal_eval(data)
     cmd_id = data["cmd_id"]
     response = data["response"]
     HOSTS[identifier].addResponse(cmd_id,response)
-    print(f"[SERVER] Host ({identifier}) - {cmd_id}: {response}")
+    debugPrint(f"Host ({identifier}) POST Response - {cmd_id}: {response}")
     return f"{identifier} - Thanks!"
 
 @app.route("/hosts/<identifier>/checkIn",methods=["GET"])
@@ -75,7 +74,7 @@ def checkInPage(identifier):
     Runs the check-in function for the host that is checking in.
     """
     checkIn(identifier)
-    print("Successful check-in for host: " + identifier)
+    debugPrint("Successful check-in for host: " + identifier)
     return "Success!"
 
 @app.route("/hosts/newHost", methods=["POST"])
@@ -103,7 +102,7 @@ def newHost():
     newHost.id += str(UNKNOWN_COUNT)
     HOSTS[newHost.id] = newHost
     TEAMS["unknown"].hosts.append(newHost)
-    print(f'[SERVER] Unknown host ({IP} - {OS}) - {newHost.id}')
+    debugPrint(f'Unknown host ({IP} - {OS}) - {newHost.id}')
     return f"{newHost.id}"
 
 def getInfoByIP(IP):
@@ -129,9 +128,9 @@ def parseConfig():
         SERVER_ADDR = config["topology"][0]["serverIP"]
         for i in range(1,NUM_OF_TEAMS): #Create all teams
             TEAMS[str(i)] = Team(str(i))
-            print("[SERVER] Created team: " + str(i))
+            debugPrint("Created team: " + str(i))
         TEAMS["unknown"] = Team("unknown") #unknown team for clients that don't fit config
-        print("[SERVER] Created team: " + "unknown")
+        debugPrint("Created team: " + "unknown")
         for i in range(len(config["hosts"])):
             currentHost = config["hosts"][i]
             createHost(currentHost)
@@ -155,8 +154,8 @@ def createHost(host):
         HOSTNAMES[hostname].hosts.append(newHost)
         TEAMS[team].hosts.append(newHost)
         HOSTS[newHost.id] = newHost
-        print(f"[SERVER] Added host: {newHost} to TEAM {team}")
-        print(f"[SERVER] Added host: {newHost} to HOSTNAME {hostname}")
+        debugPrint(f"Added host: {newHost} to TEAM {team}")
+        debugPrint(f"Added host: {newHost} to HOSTNAME {hostname}")
 
 def checkIn(hostname):
     """
@@ -168,7 +167,13 @@ def checkIn(hostname):
     host.alive = True
     host.lastCheckIn = datetime.now().strftime("%H:%M:%S")
 
+def debugPrint(statement):
+    if DEBUG:
+        print("[SERVER] " + statement)
+
 def main():
+    global DEBUG
+    DEBUG = True
     global TEAMS
     TEAMS = dict()
     global HOSTNAMES
@@ -180,7 +185,7 @@ def main():
     website.daemon = True
     website.start()
     while 1:
-        command = input("Enter a command: ")
+        command = input()
         HOSTS["Ubuntu1.1"].addCommand(command)
 
 if __name__ == "__main__":

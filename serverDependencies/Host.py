@@ -22,7 +22,6 @@ class Host:
         """
         self.commands[self.commandCounter] = Command(self.commandCounter, command)
         self.commandCounter += 1
-        print("Added command successfully.")
 
     def addResponse(self,cmd_id, resp):
         """

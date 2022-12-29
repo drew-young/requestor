@@ -23,8 +23,16 @@ fn initHost(server_ip:&str) -> String{
     let text = format!("{{\'IP\': \'{}\', \'OS\': \'{}\'}}",ip,os);
     let client = reqwest::blocking::Client::new();
     let url = format!("{}/hosts/newHost",server_ip);
-    let hostname = client.post(url).json(&text).send().unwrap().text().unwrap();
-    let hostname = format!("{}",hostname);
+    let hostname = match client.post(url).json(&text).send(){
+        Ok(ok)=>{
+            ok.text().unwrap()
+        }, Err(_)=>{
+            print(&"Can't connect to server");
+            let sleep_time = time::Duration::from_millis(5000);
+            thread::sleep(sleep_time);
+            initHost(&server_ip)
+        }
+    }.to_string();
     print(&hostname);
     return hostname;
 }

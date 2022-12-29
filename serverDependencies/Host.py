@@ -42,5 +42,6 @@ class Host:
                     queuedCommands += f'"{command_count}": {str(self.commands[i])}'
                 else:
                     queuedCommands += f'"{command_count}": {str(self.commands[i])},'
+        queuedCommands = queuedCommands.strip(",")
         queuedCommands = "{" + f'"command_count":"{command_count}",' +queuedCommands + "}" if queuedCommands else "{" + f'"command_count":"{command_count}"' + "}"
         return str(queuedCommands)

@@ -60,8 +60,9 @@ def getResponse(identifier):
     """
     Accepts a POST request for the client to send responses to
     """
-    data = request.data.decode()
-    data = ast.literal_eval(data)
+    data = request.json
+    data = json.loads(data,strict=False)
+    # data = ast.literal_eval(data)
     cmd_id = data["cmd_id"]
     response = data["response"]
     HOSTS[identifier].addResponse(cmd_id,response)
@@ -83,7 +84,8 @@ def newHost():
     Takes in data from a POST request and returns an identifier.
     """
     global UNKNOWN_COUNT
-    data = request.get_json()
+    data = request.json
+    data = ast.literal_eval(data)
     IP = data["IP"]
     OS = data["OS"]
     hostname,team = getInfoByIP(IP)

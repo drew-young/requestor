@@ -36,7 +36,8 @@ class Host:
         command_count = 0
         queuedCommands = ""
         for i in range(len(self.commands)):
-            if not self.commands[i].response:
+            if not self.commands[i].acknowledged:
+                self.commands[i].acknowledged = True
                 command_count += 1
                 if i == len(self.commands) - 1: #if it's the last one, don't include a ,
                     queuedCommands += f'"{command_count}": {str(self.commands[i])}'

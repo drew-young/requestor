@@ -22,6 +22,7 @@ class Host:
         """
         self.commands[self.commandCounter] = Command(self.commandCounter, command)
         self.commandCounter += 1
+        return str(self.commandCounter - 1)
 
     def addResponse(self,cmd_id, resp):
         """
@@ -46,3 +47,6 @@ class Host:
         queuedCommands = queuedCommands.strip(",")
         queuedCommands = "{" + f'"command_count":"{command_count}",' +queuedCommands + "}" if queuedCommands else "{" + f'"command_count":"{command_count}"' + "}"
         return str(queuedCommands)
+    
+    def getResponses(self):
+        return str(self.commands)

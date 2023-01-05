@@ -3,6 +3,9 @@ import time
 import threading
 
 def addCommand(host, command):
+    """
+    Adds command to server for a given host and returns command ID
+    """
     try:
         res = requests.post(f'{SERVER_IP}/hosts/{host}/addCommand', json={"command":command})
         if res.ok:
@@ -14,6 +17,9 @@ def addCommand(host, command):
         return None
 
 def getResponse(host, cmd_id):
+    """
+    Gets response from server for a given command ID
+    """
     try:
         res = requests.post(f'{SERVER_IP}/hosts/{host}/responses', json={"cmd_id":cmd_id})
         if res.ok:
@@ -25,6 +31,9 @@ def getResponse(host, cmd_id):
         return None
 
 def sendAndReceive(host, command):
+    """
+    Sends command to server, waits 5 seconds, then gets response
+    """
     cmd_id = addCommand(host, command)
     time.sleep(5)
     print(f"\nHost: {host} Command: {command} Response: {getResponse(host, cmd_id)}")

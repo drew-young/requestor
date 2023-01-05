@@ -114,7 +114,7 @@ def addCommand(identifier):
     Takes in a POST request with a command and adds it to the host's queue.
     """
     data = request.json
-    print(data)
+    debugPrint(f"Adding command: \"{data['command']}\" to host: {identifier}")
     command = data["command"]
     return HOSTS[identifier].addCommand(command) #Returns the command ID
 

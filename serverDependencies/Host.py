@@ -50,3 +50,6 @@ class Host:
     
     def getResponses(self):
         return str(self.commands)
+    
+    def getResponse(self,cmd_id):
+        return self.commands[int(cmd_id)].response

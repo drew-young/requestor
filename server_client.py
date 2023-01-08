@@ -6,6 +6,8 @@ def addCommand(host, command):
     """
     Adds command to server for a given host and returns command ID
     """
+    if not command:
+        return None
     try:
         res = requests.post(f'{SERVER_IP}/hosts/{host}/addCommand', json={"command":command})
         if res.ok:
@@ -20,6 +22,8 @@ def getResponse(host, cmd_id):
     """
     Gets response from server for a given command ID
     """
+    if not cmd_id:
+        return None
     try:
         res = requests.post(f'{SERVER_IP}/hosts/{host}/responses', json={"cmd_id":cmd_id})
         if res.ok:
@@ -35,8 +39,10 @@ def sendAndReceive(host, command):
     Sends command to server, waits 5 seconds, then gets response
     """
     cmd_id = addCommand(host, command)
+    if not cmd_id:
+        return None
     time.sleep(5)
-    print(f"\nHost: {host} Command: {command} Response: {getResponse(host, cmd_id)}")
+    print(f"\nHost: {host} \n\tCommand: {command} \n\tResponse: {getResponse(host, cmd_id)}")
 
 def getCheckInTimes():
     try:

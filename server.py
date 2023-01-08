@@ -66,7 +66,6 @@ def getResponse(identifier):
     """
     data = request.json
     data = json.loads(data,strict=False)
-    # data = ast.literal_eval(data)
     cmd_id = data["cmd_id"]
     response = data["response"]
     HOSTS[identifier].addResponse(cmd_id,response)

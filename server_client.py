@@ -38,9 +38,21 @@ def sendAndReceive(host, command):
     time.sleep(5)
     print(f"\nHost: {host} Command: {command} Response: {getResponse(host, cmd_id)}")
 
-def main():
+def init():
+    """
+    Sets variables for server IP, list of hosts, and number of teams
+    """
     global SERVER_IP
     SERVER_IP = "http://localhost:8080"
+    TEAMS = int() #number of teams
+    HOSTS = list() #list of hostnames
+    for i in range(TEAMS):
+        pass
+
+#todo function that checks to see if all hosts are active and prints out which hosts are down
+
+def main():
+    init()
     while True:
         command = input("\nEnter command: ")
         t = threading.Thread(target=sendAndReceive, args=("unknown.unknown1",command))

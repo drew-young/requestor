@@ -38,6 +38,19 @@ def sendAndReceive(host, command):
     time.sleep(5)
     print(f"\nHost: {host} Command: {command} Response: {getResponse(host, cmd_id)}")
 
+def getCheckInTimes():
+    try:
+        res = requests.post(f'{SERVER_IP}/api/getCheckInTimes', json={})
+        if res.ok:
+            return res.text
+        else:
+            raise Exception
+    except:
+        print("Server does not appear to be online.\nServer IP: " + SERVER_IP)
+        return None
+
+
+
 def init():
     """
     Sets variables for server IP, list of hosts, and number of teams
@@ -55,6 +68,9 @@ def main():
     init()
     while True:
         command = input("\nEnter command: ")
+        if command == "checkIn":
+            print(getCheckInTimes())
+            continue
         t = threading.Thread(target=sendAndReceive, args=("unknown.unknown1",command))
         t.start()
 

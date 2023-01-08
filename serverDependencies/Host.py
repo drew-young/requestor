@@ -1,4 +1,5 @@
 from serverDependencies.Command import Command
+from datetime import datetime
 
 class Host:
     def __init__(self,ip,os,hostname,team,alive=False):
@@ -9,7 +10,7 @@ class Host:
         self.id = f"{self.hostname}.{self.team}"
         self.commands = dict()
         self.commandCounter = 0
-        self.lastCheckIn = ""
+        self.lastCheckIn = None
         self.alive = alive
         self.addCommand('checkIn') #Command 0 is always "checkIn" and has no response
     
@@ -53,3 +54,18 @@ class Host:
     
     def getResponse(self,cmd_id):
         return self.commands[int(cmd_id)].response
+
+    def checkIn(self):
+        """
+        Updates the last check-in time to now.
+        """
+        self.alive = True
+        self.lastCheckIn = datetime.now()
+
+    def getTimeSinceLastCheckIn(self):
+        """
+        Returns the time since the last check-in.
+        """
+        if self.lastCheckIn == None:
+            return "Never checked in."
+        return (datetime.now() - self.lastCheckIn).total_seconds()

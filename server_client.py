@@ -2,6 +2,9 @@ import requests
 import time
 import threading
 
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 def addCommand(host, command):
     """
     Adds command to server for a given host and returns command ID
@@ -9,7 +12,7 @@ def addCommand(host, command):
     if not command:
         return None
     try:
-        res = requests.post(f'{SERVER_IP}/hosts/{host}/addCommand', json={"command":command})
+        res = requests.post(f'{SERVER_IP}/hosts/{host}/addCommand', json={"command":command},verify=False)
         if res.ok:
             return res.text
         else:
@@ -25,7 +28,7 @@ def getResponse(host, cmd_id):
     if not cmd_id:
         return None
     try:
-        res = requests.post(f'{SERVER_IP}/hosts/{host}/responses', json={"cmd_id":cmd_id})
+        res = requests.post(f'{SERVER_IP}/hosts/{host}/responses', json={"cmd_id":cmd_id},verify=False)
         if res.ok:
             return res.text
         else:
@@ -46,7 +49,7 @@ def sendAndReceive(host, command):
 
 def getCheckInTimes():
     try:
-        res = requests.post(f'{SERVER_IP}/api/getCheckInTimes', json={})
+        res = requests.post(f'{SERVER_IP}/api/getCheckInTimes', json={}, verify=False)
         if res.ok:
             return res.text
         else:
@@ -62,13 +65,23 @@ def init():
     Sets variables for server IP, list of hosts, and number of teams
     """
     global SERVER_IP
-    SERVER_IP = "http://localhost:8080"
+    SERVER_IP = "https://localhost:443"
     TEAMS = int() #number of teams
     HOSTS = list() #list of hostnames
     for i in range(TEAMS):
         pass
 
 #todo function that checks to see if all hosts are active and prints out which hosts are down
+
+def mainLoop():
+    command = input("\nEnter command: ")
+    #List all teams with number of active hosts
+    #Ask user which team they want to choose
+    #Select that team and ask the user what host they want to choose
+    #Ask the user what they want to do with that host (check in, run command async, shell, etc.)
+    #Allow user to change sleep time
+    #Allow user to mass change sleep time
+    pass
 
 def main():
     init()

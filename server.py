@@ -29,7 +29,7 @@ def runApp(SERVER_IP,PORT):
     """
     Runs the website on the specified IP and port.
     """
-    app.run(host=f"{SERVER_IP}",port=f"{PORT}")
+    app.run(host=f"{SERVER_IP}",port=f"{PORT}",ssl_context=('cert/cert.pem', 'cert/key.pem'))
 
 @app.route("/") #HOMEPAGE
 def homePage():
@@ -219,7 +219,7 @@ def main():
     global HOSTS
     HOSTS = dict()
     parseConfig()
-    website = threading.Thread(target=runApp,args=[SERVER_ADDR,"8080"])
+    website = threading.Thread(target=runApp,args=[SERVER_ADDR,"443"])
     website.daemon = True
     website.start()
     while 1:

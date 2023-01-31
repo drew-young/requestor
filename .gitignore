@@ -10,4 +10,4 @@
 **/*.rs.bk
 
 #Cert key
-*.pem
+/cert/

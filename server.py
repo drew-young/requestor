@@ -47,7 +47,7 @@ def hostsPage():
         hostString+=host + "\n"
     return hostString
 
-@app.route("/hosts/<identifier>/commands")
+@app.route("/hosts/<identifier>/commands", methods=["POST"])
 def getCommands(identifier):
     """
     Returns a list of commands for the client to run

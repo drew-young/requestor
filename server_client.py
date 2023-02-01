@@ -58,40 +58,108 @@ def getCheckInTimes():
         print("Server does not appear to be online.\nServer IP: " + SERVER_IP)
         return None
 
-
-
 def init():
     """
     Sets variables for server IP, list of hosts, and number of teams
     """
     global SERVER_IP
     SERVER_IP = "https://localhost:443"
-    TEAMS = int() #number of teams
-    HOSTS = list() #list of hostnames
+    server_info = requests.post(f'{SERVER_IP}/api/getServerInfo', json={}, verify=False).json()
+    global TEAMS
+    TEAMS = int(server_info['teams']) #number of teams
+    global HOSTS
+    HOSTS = list(server_info['hostnames']) #list of hostnames
     for i in range(TEAMS):
         pass
 
 #todo function that checks to see if all hosts are active and prints out which hosts are down
 
+def selectHostByTeam():
+    """
+    Allows user to select a host by team number and returns the selected host
+    """
+    for i in range(TEAMS):
+        print(f"Team {i}") #todo add active hosts number
+    print("Team unknown")
+    while True:
+        team = input("Enter team number: ")
+        if team.isdigit(): #if the input is a number
+            team = int(team)
+            if team >= 0 and team < TEAMS: #if the number is in the range of teams, break the loop
+                break
+        elif team == "unknown":
+            return selectUnknownHost()
+            return
+        elif team == "exit":
+            return
+    for index,host in enumerate(HOSTS):
+        print(f"{index} - {host}")
+    while True:
+        host = input("Enter host index: ")
+        if host.isdigit(): #if the input is a number
+            host = int(host)
+            if host >= 0 and host < len(HOSTS):
+                break
+        elif host == "exit":
+            return
+    selected_host = HOSTS[int(host)] + "." + str(team)
+    print(f"Selected host: {selected_host}")
+    return selected_host
+
+def selectUnknownHost():
+    """
+    Allows user to select a host from the unknown team and returns the selected host
+    """
+    unknown_hosts = requests.post(f'{SERVER_IP}/api/getUnknownHosts', json={}, verify=False).json()
+    for index,host in enumerate(unknown_hosts):
+        print(f"{index} - {host}")
+    while True:
+        host = input("Enter host index: ")
+        if host.isdigit():
+            host = int(host)
+            if host >= 0 and host < len(unknown_hosts):
+                break
+        elif host == "exit":
+            return
+    selected_host = unknown_hosts[int(host)]
+    print(f"Selected host: {selected_host}")
+    return selected_host
+
 def mainLoop():
-    command = input("\nEnter command: ")
-    #List all teams with number of active hosts
-    #Ask user which team they want to choose
-    #Select that team and ask the user what host they want to choose
-    #Ask the user what they want to do with that host (check in, run command async, shell, etc.)
-    #Allow user to change sleep time
-    #Allow user to mass change sleep time
-    pass
+    while True:
+        print("1. Get check in times")
+        print("2. Select host by team")
+        print("3. Select host by name (all teams)")
+        print("4. Get shell on selected host") #todo
+        print("5. Change sleep time for all hosts")
+        userIn = input("Enter index of command: ")
+        while True:
+            if userIn == "1" or userIn == "2" or userIn == "3":
+                break
+            elif userIn == "exit":
+                return
+            userIn = input("Invalid input. Enter index of command: ")
+        if userIn == "1":
+            print(getCheckInTimes())
+        elif userIn == "2":
+            selected_host = selectHostByTeam()
+            if selected_host:
+                while True:
+                    command = input(f"Enter command for {selected_host} (or exit): ")
+                    if command == "exit":
+                        break
+                    t = threading.Thread(target=sendAndReceive, args=(selected_host,command))
+                    t.start()
+        elif userIn == "3":
+            pass
+        else:
+            print("Invalid input")
 
 def main():
+    print("Welcome to the server client!")
     init()
-    while True:
-        command = input("\nEnter command: ")
-        if command == "checkIn":
-            print(getCheckInTimes())
-            continue
-        t = threading.Thread(target=sendAndReceive, args=("unknown.unknown1",command))
-        t.start()
+    mainLoop()
+    print("Exiting server client...")
 
 if __name__ == "__main__":
     main()

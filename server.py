@@ -14,7 +14,6 @@ from serverDependencies.Host import Host
 from serverDependencies.Team import Team
 from serverDependencies.Hostname import Hostname
 from datetime import datetime
-import ast
 
 """
 Disable logging for flask.
@@ -208,6 +207,23 @@ def checkInTime():
     for host in HOSTS:
         time += f"{host} - {HOSTS[host].getTimeSinceLastCheckIn()}\n"
     return time
+
+@app.route('/api/getServerInfo', methods=['POST'])
+def serverClientInfo():
+    """
+    Returns a json object of the number of teams and each hostname
+    """
+    return json.dumps({"teams":NUM_OF_TEAMS,"hostnames":list(HOSTNAMES.keys())})
+
+@app.route('/api/getUnknownHosts', methods=['POST'])
+def returnUnknownHosts():
+    """
+    Returns a list of unknown hosts.
+    """
+    unknownHosts = []
+    for host in TEAMS["unknown"].hosts:
+        unknownHosts.append(host.id)
+    return unknownHosts
 
 def main():
     global DEBUG

@@ -63,7 +63,7 @@ def init():
     Sets variables for server IP, list of hosts, and number of teams
     """
     global SERVER_IP
-    SERVER_IP = "https://localhost:443"
+    SERVER_IP = "https://c2.drewyoung.gay:443"
     server_info = requests.post(f'{SERVER_IP}/api/getServerInfo', json={}, verify=False).json()
     global TEAMS
     TEAMS = int(server_info['teams']) #number of teams
@@ -110,7 +110,11 @@ def selectUnknownHost():
     """
     Allows user to select a host from the unknown team and returns the selected host
     """
-    unknown_hosts = requests.post(f'{SERVER_IP}/api/getUnknownHosts', json={}, verify=False).json()
+    try:
+        unknown_hosts = requests.post(f'{SERVER_IP}/api/getUnknownHosts', verify=False).text.split()
+    except:
+        print("No unknown hosts.")
+        return None
     for index,host in enumerate(unknown_hosts):
         print(f"{index} - {host}")
     while True:

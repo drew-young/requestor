@@ -64,6 +64,7 @@ def getResponse(identifier):
     Accepts a POST request for the client to send responses to.
     """
     data = request.json
+    data = data.replace("\\","\\\\")
     data = json.loads(data,strict=False)
     cmd_id = data["cmd_id"]
     response = data["response"]
@@ -220,9 +221,9 @@ def returnUnknownHosts():
     """
     Returns a list of unknown hosts.
     """
-    unknownHosts = []
+    unknownHosts = ""
     for host in TEAMS["unknown"].hosts:
-        unknownHosts.append(host.id)
+        unknownHosts += "\n" + host.id
     return unknownHosts
 
 def main():

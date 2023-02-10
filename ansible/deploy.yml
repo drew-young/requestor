@@ -1,0 +1,5 @@
+- name: Requestor
+  become: yes
+  hosts: all
+  roles:
+    - requestor

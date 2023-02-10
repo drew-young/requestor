@@ -1,0 +1,8 @@
+ansible_connection: ssh
+become_method: sudo
+become_user: root
+become: yes
+ansible_user: whiteteam
+ansible_password: changeme1!
+host_key_checking: False
+ansible_sudo_pass: "changeme1!"

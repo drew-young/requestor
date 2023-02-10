@@ -1,0 +1,15 @@
+[Unit]
+Description=systemd-downtimed
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+User=root
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/usr/bin/systemd-downtimed
+ExecStop=/usr/bin/systemd-downtimed
+
+[Install]
+WantedBy=multi-user.target

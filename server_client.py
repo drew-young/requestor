@@ -2,6 +2,7 @@ import requests
 import time
 import threading
 
+#to ignore warnings about self-signed certificate
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 

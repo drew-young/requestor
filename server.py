@@ -89,8 +89,8 @@ def newHost():
     global UNKNOWN_COUNT
     data = request.json
     data = json.loads(data,strict=False)
-    IP = data["IP"]
-    OS = data["OS"]
+    IP = data["IP"].strip()
+    OS = data["OS"].strip()
     hostname,team = getInfoByIP(IP)
     host_id = hostname + "." + team
     if host_id in HOSTS:
@@ -137,7 +137,7 @@ def getInfoByIP(IP):
     """
     for hostname in HOSTNAMES: #Iterate over expected hosts
         for host in HOSTNAMES[hostname].hosts:
-            if IP == host.ip: #If the IP is in the clients list, we found the correct host
+            if IP == host.ip:
                 return host.hostname, host.team
     return "unknown","unknown"
     

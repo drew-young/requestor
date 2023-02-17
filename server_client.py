@@ -94,6 +94,10 @@ def selectHostByTeam():
         elif team == "exit":
             return
     for index,host in enumerate(HOSTS):
+        #if the host contains the word router and a number that isn't the team number, don't print it
+        if "Router" in host:
+            if "Router" + str(team) not in host:
+                continue
         print(f"{index} - {host}")
     while True:
         host = input("Enter host index: ")

@@ -28,7 +28,7 @@ def runApp(SERVER_IP,PORT):
     """
     Runs the website on the specified IP and port.
     """
-    app.run(host=f"{SERVER_IP}",port=f"{PORT}",ssl_context=('cert/cert.pem', 'cert/key.pem'))
+    app.run(host=f"{SERVER_IP}",port=f"{PORT}",ssl_context=('/home/drew/requestor/cert/cert.pem', '/home/drew/requestor/cert/key.pem'))
 
 @app.route("/") #HOMEPAGE
 def homePage():
@@ -146,7 +146,7 @@ def parseConfig():
     Iterates over 'config.json' and stores necessary information
     """
     try:
-        with open("config.json") as config:
+        with open("/home/drew/requestor/config.json") as config:
             config = json.load(config) #Load the config file
         global NUM_OF_TEAMS
         NUM_OF_TEAMS = int(config["topology"][0]["teams"]) + 1 #Pull the # of all teams
@@ -206,7 +206,13 @@ def checkInTime():
     """
     time = ""
     for host in HOSTS:
-        time += f"{host} - {HOSTS[host].getTimeSinceLastCheckIn()}\n"
+        try:
+            if int(HOSTS[host].getTimeSinceLastCheckIn()) < 10:
+                time += f"{host} - Alive\n"
+            else:
+                time += f"{host} - {HOSTS[host].getTimeSinceLastCheckIn()}\n"
+        except:
+            time += f"{host} - {HOSTS[host].getTimeSinceLastCheckIn()}\n"
     return time
 
 @app.route('/api/getServerInfo', methods=['POST'])
@@ -239,10 +245,7 @@ def main():
     website = threading.Thread(target=runApp,args=[SERVER_ADDR,"443"])
     website.daemon = True
     website.start()
-    while 1:
-        command = input()
-        for host in TEAMS["unknown"].hosts:
-            host.addCommand(command)
+    website.join()
 
 if __name__ == "__main__":
     main()

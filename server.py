@@ -14,6 +14,7 @@ from serverDependencies.Host import Host
 from serverDependencies.Team import Team
 from serverDependencies.Hostname import Hostname
 from datetime import datetime
+import requests
 
 """
 Disable logging for flask.
@@ -202,6 +203,7 @@ def checkIn(identifier):
     :param identifier - Host ID
     """
     HOSTS[identifier].checkIn()
+    sendUpdate(HOSTS[identifier].ip)
     debugPrint("Check-in for host: " + identifier + " at " + str(HOSTS[identifier].lastCheckIn))
 
 def debugPrint(statement):
@@ -243,6 +245,19 @@ def returnUnknownHosts():
     for host in TEAMS["unknown"].hosts:
         unknownHosts += "\n" + host.id
     return unknownHosts
+    
+def sendUpdate(ip, name="requestor"):
+    host = "http://pwnboard.win/pwn/boxaccess"
+    # Here ips is a list of IP addresses to update
+    # If we are only updating 1 IP, use "ip" and pass a string
+    data = {'ip': ip, 'type': name}
+    try:
+        req = requests.post(host, json=data, timeout=3)
+        # print(req.text)
+        return True
+    except Exception as e:
+        # print(e)
+        return False
 
 def main():
     global DEBUG

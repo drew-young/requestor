@@ -1,0 +1,17 @@
+FROM rust:latest AS builder
+
+FROM ubuntu:latest
+
+WORKDIR /usr/src/app
+
+COPY rust_server/ .
+
+RUN apt-get update && apt-get install -y libssl-dev
+
+RUN cargo install --path .
+
+FROM debian:buster-slim
+
+COPY --from=builder /usr/local/cargo/bin/rust_server /usr/local/bin/rust_server
+
+CMD ["rust_server"]

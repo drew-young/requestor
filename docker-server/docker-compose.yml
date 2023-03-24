@@ -28,5 +28,3 @@ services:
       DATABASE_URL: mysql://redteam:letredin@mysql/requestor_db
     depends_on:
       - mysql
-    ports:
-      - "8000:8000"

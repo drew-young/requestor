@@ -13,7 +13,7 @@ CREATE TABLE hosts (
     hostname_id INT NOT NULL,
     alive BOOLEAN NOT NULL,
     lastCheckIn DATETIME NOT NULL,
-    FOREIGN KEY (hostname_id) REFERENCES hostname(id)
+    FOREIGN KEY (hostname_id) REFERENCES hostnames(id)
 );
 
 CREATE TABLE commands (
@@ -22,17 +22,5 @@ CREATE TABLE commands (
     command VARCHAR(255) NOT NULL,
     response VARCHAR(255) NOT NULL,
     acknowledged BOOLEAN NOT NULL,
-    FOREIGN KEY (host_id) REFERENCES host(id)
+    FOREIGN KEY (host_id) REFERENCES hosts(id)
 );
-
-CREATE FUNCTION update_command_response(
-    command_id INTEGER,
-    response_text TEXT
-)
-RETURNS VOID AS $$
-BEGIN
-    UPDATE commands
-    SET response = response_text
-    WHERE id = command_id;
-END;
-$$ LANGUAGE plpgsql;

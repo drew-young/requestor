@@ -12,7 +12,6 @@ CREATE TABLE hosts (
     hostname VARCHAR(255) NOT NULL,
     alive BOOLEAN DEFAULT false,
     lastCheckIn DATETIME DEFAULT NULL,
-    FOREIGN KEY (hostname) REFERENCES hostnames(hostname)
 );
 
 CREATE TABLE commands (
@@ -21,7 +20,6 @@ CREATE TABLE commands (
     command VARCHAR(255) NOT NULL,
     response VARCHAR(255) DEFAULT '',
     acknowledged BOOLEAN DEFAULT false,
-    FOREIGN KEY (host_id) REFERENCES hosts(id)
 );
 
 INSERT INTO hostnames (hostname, ipFormat) VALUES ('localhost', '127.0.0.X');
@@ -35,3 +33,15 @@ VALUES (
     (SELECT id FROM hosts WHERE identifier = 'localhost.1'),
     'echo "Hello World"'
 );
+
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ls /' at line 1
+mysql> source /docker-entrypoint-initdb.d/init.sql;
+Database changed
+ERROR 1050 (42S01): Table 'hostnames' already exists
+ERROR 1822 (HY000): Failed to add the foreign key constraint. Missing index for constraint 'hosts_ibfk_1' in the referenced table 'hostnames'
+ERROR 1824 (HY000): Failed to open the referenced table 'hosts'
+Query OK, 1 row affected (0.02 sec)
+
+ERROR 1146 (42S02): Table 'requestor_db.hosts' doesn't exist
+ERROR 1146 (42S02): Table 'requestor_db.hosts' doesn't exist
+ERROR 1146 (42S02): Table 'requestor_db.commands' doesn't exist

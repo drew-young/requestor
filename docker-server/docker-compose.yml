@@ -26,5 +26,6 @@ services:
     restart: always
     environment:
       DATABASE_URL: mysql://redteam:letredin@mysql/requestor_db
+      PWNBOARD_URL: http://pwnboard.win/pwn/boxaccess
     depends_on:
       - mysql

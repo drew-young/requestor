@@ -1,17 +1,12 @@
 USE requestor_db;
 
-CREATE TABLE hostnames (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    hostname VARCHAR(255) NOT NULL,
-    ipFormat VARCHAR(255) NOT NULL
-);
-
 CREATE TABLE hosts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     identifier VARCHAR(255) NOT NULL,
     hostname VARCHAR(255) NOT NULL,
+    ip VARCHAR(255) NOT NULL, 
     alive BOOLEAN DEFAULT false,
-    lastCheckIn DATETIME DEFAULT NULL,
+    lastCheckIn DATETIME DEFAULT NULL
 );
 
 CREATE TABLE commands (
@@ -19,29 +14,36 @@ CREATE TABLE commands (
     host_id INT NOT NULL,
     command VARCHAR(255) NOT NULL,
     response VARCHAR(255) DEFAULT '',
-    acknowledged BOOLEAN DEFAULT false,
+    acknowledged BOOLEAN DEFAULT false
 );
 
-INSERT INTO hostnames (hostname, ipFormat) VALUES ('localhost', '127.0.0.X');
+delimiter //
 
-INSERT INTO hosts (identifier, hostname) VALUES ('localhost.1', 'localhost');
+CREATE FUNCTION issueCommand(host_identifier VARCHAR(255), command VARCHAR(255)) RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE host_id INT;
+    DECLARE command_id INT;
+    SELECT id INTO host_id FROM hosts WHERE identifier = host_identifier;
+    INSERT INTO commands (host_id, command) VALUES (host_id, command);
+    SELECT LAST_INSERT_ID() INTO command_id;
+    RETURN command_id;
+END//
 
-SELECT id FROM hosts WHERE identifier = 'localhost.1';
+CREATE FUNCTION updateCommandResponse(command_id INT, response VARCHAR(255)) RETURNS INT
+DETERMINISTIC
+BEGIN
+    UPDATE commands SET response = response WHERE id = command_id;
+    RETURN command_id;
+END//
 
-INSERT INTO commands (host_id, command)
-VALUES (
-    (SELECT id FROM hosts WHERE identifier = 'localhost.1'),
-    'echo "Hello World"'
-);
+CREATE FUNCTION checkIn(host_identifier VARCHAR(255)) RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE host_id INT;
+    SELECT id INTO host_id FROM hosts WHERE identifier = host_identifier;
+    UPDATE hosts SET alive = true, lastCheckIn = NOW() WHERE id = host_id;
+    RETURN host_id;
+END//
 
-ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ls /' at line 1
-mysql> source /docker-entrypoint-initdb.d/init.sql;
-Database changed
-ERROR 1050 (42S01): Table 'hostnames' already exists
-ERROR 1822 (HY000): Failed to add the foreign key constraint. Missing index for constraint 'hosts_ibfk_1' in the referenced table 'hostnames'
-ERROR 1824 (HY000): Failed to open the referenced table 'hosts'
-Query OK, 1 row affected (0.02 sec)
-
-ERROR 1146 (42S02): Table 'requestor_db.hosts' doesn't exist
-ERROR 1146 (42S02): Table 'requestor_db.hosts' doesn't exist
-ERROR 1146 (42S02): Table 'requestor_db.commands' doesn't exist
+delimiter ;

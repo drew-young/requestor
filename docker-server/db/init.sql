@@ -37,13 +37,15 @@ BEGIN
     RETURN command_id;
 END//
 
-CREATE FUNCTION checkIn(host_identifier VARCHAR(255)) RETURNS INT
+CREATE FUNCTION checkIn(host_identifier VARCHAR(255)) RETURNS VARCHAR(255)
 DETERMINISTIC
 BEGIN
+    DECLARE host_ip VARCHAR(255);
     DECLARE host_id INT;
+    SELECT ip INTO host_ip FROM hosts WHERE identifier = host_identifier;
     SELECT id INTO host_id FROM hosts WHERE identifier = host_identifier;
     UPDATE hosts SET alive = true, lastCheckIn = NOW() WHERE id = host_id;
-    RETURN host_id;
+    RETURN host_ip;
 END//
 
 delimiter ;

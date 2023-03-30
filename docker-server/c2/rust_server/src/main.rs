@@ -6,21 +6,31 @@ use serde::{Deserialize, Serialize};
 use reqwest::StatusCode;
 use reqwest::blocking::Client;
 
+//Used for checkin
 #[derive(Deserialize)]
 struct Host {
     identifier: String,
 }
 
+//Used for command responses
 #[derive(serde::Deserialize)]
 struct CommandResponse {
     cmd_id: i32,
     response: String,
 }
 
+//Used for issuing commands
 #[derive(serde::Deserialize)]
 struct Command {
     host_id: String,
     command: String,
+}
+
+//Used for pwnboard
+#[derive(Debug, Serialize, Deserialize)]
+struct Payload {
+    ip: String,
+    application: String,
 }
 
 #[get("/fakedata")]
@@ -85,23 +95,18 @@ async fn check_in(input: web::Json<Host>) -> impl Responder {
 
 fn check_in_host(identifier: &str) -> String {
     let res = query_sql(&format!("SELECT checkIn('{}');", identifier));
-    match pwnboard_update(&res) {
+    match pwnboard_update(res.clone()) {
         Ok(_) => println!("Pwnboard updated successfully"),
         Err(e) => println!("Error updating pwnboard: {}", e),
     }
     res
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Payload {
-    ip: String,
-    application: String,
-}
 
-fn pwnboard_update(identifier: &str) -> Result<(), reqwest::Error>{
+fn pwnboard_update(identifier: String) -> Result<(), reqwest::Error>{
     let pwnboard_url = env::var("PWNBOARD_URL").expect("PWNBOARD_URL not set");
     let payload = Payload {
-        ip: identifier.to_owned().strip_suffix("\n").unwrap().to_owned(),
+        ip: identifier.strip_suffix("\n").unwrap().to_owned(),
         application: "requestor".to_owned(),
     };
 

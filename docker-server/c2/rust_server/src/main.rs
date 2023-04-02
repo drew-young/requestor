@@ -119,13 +119,20 @@ async fn new_host(input: web::Json<NewHost>) -> impl Responder {
 }
 
 //For user to get all check-in times for every host
-#[get("/getcheckintimes")]
+#[post("/getcheckintimes")]
 async fn get_checkin_times() -> impl Responder {
-    let res = query_sql("SELECT identifier, CASE WHEN alive = 1 THEN 'ALIVE' ELSE lastCheckIn END AS lastCheckIn FROM hosts;");
+    let res = query_sql("SELECT CONCAT(hostname, ' - ', CASE WHEN alive = 1 THEN 'ALIVE' ELSE lastCheckIn END) AS host_checkin FROM hosts;");
     HttpResponse::Ok().body(res)
 }
 
-
+//For user to get info about the server
+#[post("/getserverinfo")]
+async fn get_server_info() -> impl Responder {
+    let num_of_teams = query_sql("SELECT COUNT(*) FROM hosts;");
+    let hostnames = query_sql("SELECT hostname FROM hostnames;");
+    let res = format!("Number of teams: {}\nHostnames: {}", num_of_teams, hostnames);
+    HttpResponse::Ok().body(res)
+}
 
 fn check_in_host(identifier: &str) -> String {
     let res = query_sql(&format!("SELECT checkIn('{}');", identifier));
@@ -199,6 +206,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/api")
                     .service(get_checkin_times)
+                    .service(get_server_info)
             )
     })
     .bind(("0.0.0.0", 8000))?

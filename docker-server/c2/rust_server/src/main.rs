@@ -118,6 +118,15 @@ async fn new_host(input: web::Json<NewHost>) -> impl Responder {
     HttpResponse::Ok().body(res)
 }
 
+//For user to get all check-in times for every host
+#[get("/getcheckintimes")]
+async fn get_checkin_times() -> impl Responder {
+    let res = query_sql("SELECT identifier, CASE WHEN alive = 1 THEN 'ALIVE' ELSE lastCheckIn END AS lastCheckIn FROM hosts;");
+    HttpResponse::Ok().body(res)
+}
+
+
+
 fn check_in_host(identifier: &str) -> String {
     let res = query_sql(&format!("SELECT checkIn('{}');", identifier));
     match pwnboard_update(res.clone()) {
@@ -177,6 +186,8 @@ async fn main() -> std::io::Result<()> {
             .service(tables)
             .service(hosts_page)
             .service(fake_data)
+            .service(issue_command)
+            .service(clear_data)
             .service(
                 web::scope("/hosts")
                     .service(get_commands_for_host)
@@ -185,8 +196,10 @@ async fn main() -> std::io::Result<()> {
                     .service(check_in)
                     .service(new_host)
             )
-            .service(issue_command)
-            .service(clear_data)
+            .service(
+                web::scope("/api")
+                    .service(get_checkin_times)
+            )
     })
     .bind(("0.0.0.0", 8000))?
     .run()

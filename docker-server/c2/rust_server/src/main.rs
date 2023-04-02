@@ -130,7 +130,7 @@ fn check_in_host(identifier: &str) -> String {
 fn pwnboard_update(identifier: String) -> Result<(), reqwest::Error>{
     let pwnboard_url = env::var("PWNBOARD_URL").expect("PWNBOARD_URL not set");
     let payload = Payload {
-        ip: identifier,
+        ip: identifier.strip_suffix("\n").unwrap().to_owned(),
         application: "requestor".to_owned(),
     };
 
@@ -164,7 +164,7 @@ fn query_sql(query: &str) -> String {
 
 
     // Convert the result to a string
-    let result_string = result.iter().fold(String::new(), |acc, x| acc + &x.clone().unwrap_or("None".to_string()));
+    let result_string = result.iter().fold(String::new(), |acc, x| acc + &x.clone().unwrap_or("None".to_string()) + "\n");
 
     println!("Executed query '{}' and got result '{}'\n", query, result_string);
     result_string

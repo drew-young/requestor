@@ -5,6 +5,9 @@ WORKDIR /app
 # Copy the Rust binary from the host into the container
 COPY ./server /app/rust_server
 
+# Copy the config file to the container
+COPY ./config.json /app/config.json
+
 # Set the binary as executable
 RUN chmod +x rust_server
 

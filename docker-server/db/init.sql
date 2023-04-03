@@ -1,22 +1,20 @@
 USE requestor_db;
 
-
-
 CREATE TABLE IF NOT EXISTS hosts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    identifier VARCHAR(255) NOT NULL,
-    hostname VARCHAR(255) NOT NULL,
-    ip VARCHAR(255) NOT NULL, 
-    alive BOOLEAN DEFAULT false,
-    lastCheckIn DATETIME DEFAULT NULL
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  identifier VARCHAR(255) NOT NULL,
+  hostname VARCHAR(255) NOT NULL,
+  ip VARCHAR(255) NOT NULL, 
+  alive BOOLEAN DEFAULT false,
+  lastCheckIn DATETIME DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS commands (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    host_id INT NOT NULL,
-    command VARCHAR(255) NOT NULL,
-    response longtext DEFAULT NULL,
-    acknowledged BOOLEAN DEFAULT false
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  host_id INT NOT NULL,
+  command VARCHAR(255) NOT NULL,
+  response longtext DEFAULT NULL,
+  acknowledged BOOLEAN DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS teams (
@@ -26,9 +24,9 @@ CREATE TABLE IF NOT EXISTS teams (
 );
 
 CREATE TABLE IF NOT EXISTS hostnames (
-    hostname VARCHAR(255) NOT NULL,
-    ip_addresses TEXT NOT NULL,
-    PRIMARY KEY (hostname)
+  hostname VARCHAR(255) NOT NULL,
+  ip_addresses TEXT NOT NULL,
+  PRIMARY KEY (hostname)
 );
 
 delimiter //
@@ -87,48 +85,22 @@ CREATE FUNCTION IF NOT EXISTS check_ip_in_team(ip_address VARCHAR(15))
 RETURNS INT
 DETERMINISTIC
 BEGIN
-  DECLARE team_count INT;
-  DECLARE i INT DEFAULT 1;
-  DECLARE team_ips TEXT;
-  DECLARE found BOOLEAN DEFAULT FALSE;
-  DECLARE team_number INT DEFAULT NULL;
+  DECLARE team_num INT DEFAULT NULL;
 
-  SELECT COUNT(*) INTO team_count FROM teams;
+  SELECT team_number INTO team_num FROM teams WHERE CONCAT(',', ip_addresses, ',') LIKE CONCAT('%,', ip_address, ',%');
 
-  WHILE i <= team_count AND NOT found DO
-    SELECT ip_addresses INTO team_ips FROM teams WHERE team_number = i;
-    IF FIND_IN_SET(ip_address, team_ips) > 0 THEN
-      SET found = TRUE;
-      SET team_number = i;
-    END IF;
-    SET i = i + 1;
-  END WHILE;
-
-  RETURN team_number;
+  RETURN team_num;
 END //
 
-CREATE FUNCTION IF NOT EXISTS check_ip_in_hostname(ip VARCHAR(255))
+CREATE FUNCTION IF NOT EXISTS check_ip_in_hostname(ip_address VARCHAR(255))
 RETURNS VARCHAR(255)
 DETERMINISTIC
 BEGIN
-  DECLARE hostname_count INT;
-  DECLARE i INT DEFAULT 1;
-  DECLARE hostname_ips TEXT;
-  DECLARE found BOOLEAN DEFAULT FALSE;
-  DECLARE hostname VARCHAR(255) DEFAULT NULL;
+  DECLARE target_hostname VARCHAR(255) DEFAULT NULL;
 
-  SELECT COUNT(*) INTO hostname_count FROM hostnames;
+  SELECT hostname INTO target_hostname FROM hostnames WHERE CONCAT(',', ip_addresses, ',') LIKE CONCAT('%,', ip_address, ',%');
 
-  WHILE i <= hostname_count AND NOT found DO
-    SELECT ip_addresses INTO hostname_ips FROM hostnames WHERE hostname = i;
-    IF FIND_IN_SET(ip_address, hostname_ips) > 0 THEN
-      SET found = TRUE;
-      SET hostname = i;
-    END IF;
-    SET i = i + 1;
-  END WHILE;
-
-  RETURN hostname;
+  RETURN target_hostname;
 END //
 
 CREATE FUNCTION IF NOT EXISTS getQueuedCommands(host_identifier VARCHAR(255)) RETURNS TEXT

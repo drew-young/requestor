@@ -5,6 +5,7 @@ use mysql::prelude::Queryable;
 use serde::{Deserialize, Serialize};
 use reqwest::StatusCode;
 use reqwest::blocking::Client;
+use std::fs::File;
 
 //Used for checkin
 #[derive(Deserialize)]
@@ -112,7 +113,7 @@ async fn check_in(input: web::Json<Host>) -> impl Responder {
 //For client to init
 #[post("/newhost")]
 async fn new_host(input: web::Json<NewHost>) -> impl Responder {
-    let res = query_sql(&format!("SELECT newHost('{}');", input.ip));
+    let res = query_sql(&format!("SELECT newHost('{}');", input.ip)).strip_suffix("\n").unwrap().to_owned();
     println!("Created new host: '{}' from IP: '{}'", &res, input.ip);
     check_in_host(&res);
     HttpResponse::Ok().body(res)
@@ -186,8 +187,84 @@ fn query_sql(query: &str) -> String {
     result_string
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct ConfigFile {
+    hosts: Vec<ConfigHost>,
+    routers: Vec<ConfigHost>,
+    topology: Vec<ConfigTopology>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ConfigHost {
+    hostname: String,
+    ip: String,
+    os: ConfigOs,
+    service: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ConfigTopology {
+    teams: String,
+    #[serde(rename = "serverIP")]
+    server_ip: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum ConfigOs {
+    Linux,
+    #[serde(rename = "pfSense")]
+    PfSense,
+    Windows,
+}
+
+//Function to take config.json file and add to mysql database
+fn parse_config() {
+    let config_file = File::open("config.json").expect("Unable to open config.json");
+    let config: ConfigFile = serde_json::from_reader(config_file).expect("Unable to parse config.json");
+
+    let num_of_teams = config.topology[0].teams.parse::<i32>().unwrap(); //converts string to i32 for team field in config
+
+    //drop existing data from tables
+    query_sql("DELETE FROM teams;");
+    query_sql("DELETE FROM hostnames;");
+    query_sql("DELETE FROM hosts;");
+    query_sql("DELETE FROM commands;");
+
+    for i in 1..num_of_teams + 1 { //for each team, add to database
+        query_sql(&format!("INSERT INTO teams (team_number, ip_addresses) VALUES ({},'');", i));
+        println!("Created new team: '{}'", i);
+    }
+
+    //upadate teams with IP addresses to expect
+    for host in &config.hosts {
+        query_sql(&format!("INSERT INTO hostnames (hostname, ip_addresses) VALUES ('{}', '');", host.hostname)); //create hostname
+        for i in 1..num_of_teams + 1 { //for each host, add expected IPs to each team and hostname
+            let new_ip = host.ip.replace("x", &i.to_string());
+            query_sql(&format!("UPDATE teams SET ip_addresses = CONCAT(ip_addresses, ',', '{}') WHERE team_number = {};", new_ip, i)); //add ip to team
+            query_sql(&format!("UPDATE hostnames SET ip_addresses = CONCAT(ip_addresses, ',', '{}') WHERE hostname = '{}';", new_ip, host.hostname)); //add ip to hostname
+            println!("Added host: '{}' from IP: '{}' for team: '{}' and hostname: {}", new_ip, host.ip, i, host.hostname);
+
+        }
+    }
+
+    for host in config.hosts {
+        for i in 1..num_of_teams + 1 { //for each host, add to each team
+            let new_ip = host.ip.replace("x", &i.to_string());
+            let res = query_sql(&format!("SELECT newHost('{}');", new_ip));
+            println!("Created new host: '{}' from IP: '{}' for team: '{}', hostname = {}", new_ip, host.ip, i, &res);
+
+        }
+        println!("Created new host: '{}' from IP: '{}'", host.hostname, host.ip);
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    println!("Starting server...");
+    println!("Parsing config.json...");
+    parse_config();
+    println!("Done parsing config.json");
+    println!("Starting web server...");
     HttpServer::new(|| {
         App::new()
             .service(tables)

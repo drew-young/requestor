@@ -44,20 +44,10 @@ struct CommandRequest {
     cmd_id: i32
 }
 
-#[get("/fakedata")]
-async fn fake_data() -> impl Responder {
-    //adds some fake data to test with
-    query_sql("INSERT INTO hosts (identifier, hostname, ip) VALUES ('localhost.1','localhost', '10.1.1.10');");
-    query_sql("INSERT INTO hosts (identifier, hostname, ip) VALUES ('localhost.2','localhost', '10.1.1.20');");
-    query_sql("SELECT issueCommand('localhost.1','ls');");
-    query_sql("SELECT issueCommand('localhost.2','whoami');");
-    let res = query_sql("SELECT command FROM commands;");
-    HttpResponse::Ok().body(res)
-}
-
 #[get("/")]
-async fn tables() -> impl Responder {
-    let res = query_sql("SHOW TABLES;");
+async fn index() -> impl Responder {
+    let res = "Definitely not a C2 server.";
+    println!("Request received for '/'.");
     HttpResponse::Ok().body(res)
 }
 
@@ -67,6 +57,14 @@ async fn clear_data() -> impl Responder {
     query_sql("DELETE FROM commands;");
     let res = query_sql("SELECT * FROM hosts;");
     HttpResponse::Ok().body(res)
+}
+
+#[get("/init")]
+async fn init() -> impl Responder {
+    println!("Parsing config.json...");
+    parse_config();
+    println!("Done parsing config.json");
+    HttpResponse::Ok().body("Init complete.")
 }
 
 #[get("/hosts")]
@@ -271,17 +269,13 @@ fn parse_config() {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("Starting server...");
-    println!("Parsing config.json...");
-    parse_config();
-    println!("Done parsing config.json");
     println!("Starting web server...");
     HttpServer::new(|| {
         App::new()
-            .service(tables)
+            .service(index)
             .service(hosts_page)
-            .service(fake_data)
             .service(clear_data)
+            .service(init)
             .service(
                 web::scope("/hosts")
                 .service(get_commands_for_host)
@@ -302,4 +296,9 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
     //TODO implement multi-threading
+    //TODO implement logging 
+    //TOOD implement error handling
+    //TODO implement database connection pooling
+    //TODO make /init a POST request and add a password
+
 }

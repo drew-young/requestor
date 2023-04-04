@@ -118,13 +118,11 @@ BEGIN
   RETURN IFNULL((SELECT command FROM commands WHERE id = cmd_id), 'NONE');
 END//
 
-CREATE TRIGGER update_alive
-BEFORE UPDATE ON hosts
-FOR EACH ROW
-BEGIN
-    IF (NEW.lastCheckIn < DATE_SUB(NOW(), INTERVAL 15 SECOND)) THEN
-        SET NEW.alive = 0;
-    END IF;
-END//
+CREATE EVENT update_alive_event
+ON SCHEDULE EVERY 5 SECOND
+DO
+  UPDATE hosts
+  SET alive = (lastCheckIn >= DATE_SUB(NOW(), INTERVAL 15 SECOND))//
+
 
 delimiter ;

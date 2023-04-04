@@ -13,7 +13,7 @@ def addCommand(host, command):
     if not command:
         return None
     try:
-        res = requests.post(f'{SERVER_IP}/hosts/{host}/addCommand', json={"command":command},verify=False)
+        res = requests.post(f'{SERVER_IP}/hosts/issuecommand', json={"host_id":host, "command":command},verify=False)
         if res.ok:
             return res.text
         else:
@@ -29,7 +29,7 @@ def getResponse(host, cmd_id):
     if not cmd_id:
         return None
     try:
-        res = requests.post(f'{SERVER_IP}/hosts/{host}/responses', json={"cmd_id":cmd_id},verify=False)
+        res = requests.post(f'{SERVER_IP}/hosts/responses', json={"cmd_id":int(cmd_id)},verify=False)
         if res.ok:
             return res.text
         else:
@@ -45,12 +45,14 @@ def sendAndReceive(host, command):
     cmd_id = addCommand(host, command)
     if not cmd_id:
         return None
-    time.sleep(15)
+    else:
+        cmd_id = cmd_id.strip()
+    time.sleep(7)
     print(f"\nHost: {host} \n\tCommand: {command} \n\tResponse: {getResponse(host, cmd_id)}")
 
 def getCheckInTimes():
     try:
-        res = requests.post(f'{SERVER_IP}/api/getCheckInTimes', json={}, verify=False)
+        res = requests.post(f'{SERVER_IP}/api/getcheckintimes', json={}, verify=False)
         if res.ok:
             return res.text
         else:
@@ -65,13 +67,18 @@ def init():
     """
     global SERVER_IP
     SERVER_IP = "https://129.21.21.74:443"
-    server_info = requests.post(f'{SERVER_IP}/api/getServerInfo', json={}, verify=False).json()
+    server_info = requests.post(f'{SERVER_IP}/api/getserverinfo', json={}, verify=False).text
+    #expect Number of teams: {int} Hostnames: {list of hostnames separated by newlines}
+    server_info = server_info.split("\n")
     global TEAMS
-    TEAMS = int(server_info['teams']) #number of teams
+    TEAMS = int(server_info[0].strip("Number of teams: ")) #number of teams
     global HOSTS
-    HOSTS = list(server_info['hostnames']) #list of hostnames
-    for i in range(TEAMS):
-        pass
+    #add all hosts except empty ones
+    HOSTS = list(server_info[3:]) #list of hostnames
+    for host in HOSTS:
+        if host == "":
+            HOSTS.remove(host)
+
 
 #todo function that checks to see if all hosts are active and prints out which hosts are down
 
@@ -81,16 +88,12 @@ def selectHostByTeam():
     """
     for i in range(TEAMS):
         print(f"Team {i}") #todo add active hosts number
-    print("Team unknown")
     while True:
         team = input("Enter team number: ")
         if team.isdigit(): #if the input is a number
             team = int(team)
             if team >= 0 and team < TEAMS: #if the number is in the range of teams, break the loop
                 break
-        elif team == "unknown":
-            return selectUnknownHost()
-            return
         elif team == "exit":
             return
     for index,host in enumerate(HOSTS):
@@ -138,12 +141,13 @@ def mainLoop():
     while True:
         print("1. Get check in times")
         print("2. Select host by team")
-        print("3. Select host by name (all teams)")
+        print("3. Select host by name (all teams)") #todo
         print("4. Get shell on selected host") #todo
         print("5. Change sleep time for all hosts")
+        print("6. Select host by name (unknown host)")
         userIn = input("Enter index of command: ")
         while True:
-            if userIn == "1" or userIn == "2" or userIn == "3":
+            if userIn == "1" or userIn == "2" or userIn == "3" or userIn == "6":
                 break
             elif userIn == "exit":
                 return
@@ -161,6 +165,16 @@ def mainLoop():
                     t.start()
         elif userIn == "3":
             pass
+        elif userIn == "6":
+            selected_host = input("Enter identifier: ")
+            if selected_host and selected_host != "exit":
+                while True:
+                    command = input(f"Enter command for {selected_host} (or exit): ")
+                    if command == "exit":
+                        break
+                    t = threading.Thread(target=sendAndReceive, args=(selected_host,command))
+                    t.start()
+
         else:
             print("Invalid input")
 

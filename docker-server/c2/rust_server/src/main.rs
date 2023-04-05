@@ -78,10 +78,6 @@ async fn hosts_page() -> impl Responder {
 
 #[post("/commands")]
 async fn get_commands_for_host(id: web::Json<Host>) -> Result<HttpResponse> {
-    let hosts = query_sql("SELECT identifier FROM hosts;");
-    if !hosts.contains(&id.identifier) {
-        return Ok(HttpResponse::NotFound().body("RE-INIT"));
-    }
     let res = query_sql(&format!("SELECT getQueuedCommands('{}');", id.identifier)).strip_suffix("\n").unwrap().to_string();
     Ok(HttpResponse::Ok().body(res))
 }
@@ -300,5 +296,6 @@ async fn main() -> std::io::Result<()> {
     //TOOD implement error handling
     //TODO implement database connection pooling
     //TODO make /init a POST request and add a password
+    //TODO fix sql if double connections
 
 }

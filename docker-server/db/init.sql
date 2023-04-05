@@ -108,7 +108,10 @@ DETERMINISTIC
 BEGIN
   DECLARE host_id INT;
   SELECT id INTO host_id FROM hosts WHERE identifier = host_identifier;
-RETURN IFNULL((SELECT GROUP_CONCAT(id SEPARATOR ';') FROM commands WHERE host_id = host_id AND acknowledged = false), 'NONE');
+  IF host_id IS NULL THEN
+    RETURN "RE-INIT";
+  END IF;
+  RETURN IFNULL((SELECT GROUP_CONCAT(id SEPARATOR ';') FROM commands WHERE host_id = host_id AND acknowledged = false), 'NONE');
 END//
 
 CREATE FUNCTION IF NOT EXISTS getCommand(cmd_id INT) RETURNS TEXT

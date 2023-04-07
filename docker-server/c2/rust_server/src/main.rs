@@ -6,6 +6,16 @@ use serde::{Deserialize, Serialize};
 use reqwest::StatusCode;
 use reqwest::blocking::Client;
 use std::fs::File;
+use lazy_static::lazy_static;
+
+//global var for mysql connection pool
+lazy_static! {
+    static ref POOL: Pool = {
+        let url = env::var("DATABASE_URL").expect("DATABASE_URL not set");
+        let opts = Opts::from_url(&url).unwrap();
+        Pool::new(opts).unwrap()
+    };
+}
 
 //Used for checkin
 #[derive(Deserialize)]
@@ -173,13 +183,8 @@ fn pwnboard_update(identifier: String) -> Result<(), reqwest::Error>{
 }
 
 fn query_sql(query: &str) -> String {
-    // Get database URL from environment variable
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL not set");
-
-    // Establish a database connection
-    let opts = Opts::from_url(&database_url).unwrap();
-    let pool = Pool::new(opts).unwrap();
-    let mut conn = pool.get_conn().unwrap();
+    // Get the pool
+    let mut conn = POOL.get_conn().unwrap();
 
     // Make a query and get the result
     let result = conn.query_map(query, |row: mysql::Row| row.get::<String, _>(0)).unwrap();
@@ -294,7 +299,6 @@ async fn main() -> std::io::Result<()> {
     //TODO implement multi-threading
     //TODO implement logging 
     //TOOD implement error handling
-    //TODO implement database connection pooling
     //TODO make /init a POST request and add a password
     //TODO fix sql if double connections
 

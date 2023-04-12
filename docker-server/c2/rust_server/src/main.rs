@@ -89,6 +89,7 @@ async fn hosts_page() -> impl Responder {
 #[post("/commands")]
 async fn get_commands_for_host(id: web::Json<Host>) -> Result<HttpResponse> {
     let res = query_sql(&format!("SELECT getQueuedCommands('{}');", id.identifier)).strip_suffix("\n").unwrap().to_string();
+    check_in_host(&id.identifier);
     Ok(HttpResponse::Ok().body(res))
 }
 

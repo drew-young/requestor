@@ -66,6 +66,7 @@ async fn clear_data() -> impl Responder {
     query_sql("DELETE FROM hosts;");
     query_sql("DELETE FROM commands;");
     query_sql("DELETE FROM hostnames;");
+    query_sql("DELETE FROM teams;");
     HttpResponse::Ok().body("All data cleared.")
 }
 

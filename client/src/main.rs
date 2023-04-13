@@ -110,7 +110,7 @@ fn get_commands(identifier:&str) -> bool {
         if cmd.eq("ERROR"){
             return false
         }
-        println!("{}: {}",cmd_id,cmd);
+        print(format!("{}: {}",cmd_id,cmd));
         handle_command(cmd_id,&cmd,identifier);
     }
     true

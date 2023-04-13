@@ -65,8 +65,8 @@ async fn index() -> impl Responder {
 async fn clear_data() -> impl Responder {
     query_sql("DELETE FROM hosts;");
     query_sql("DELETE FROM commands;");
-    let res = query_sql("SELECT * FROM hosts;");
-    HttpResponse::Ok().body(res)
+    query_sql("DELETE FROM hostnames;");
+    HttpResponse::Ok().body("All data cleared.")
 }
 
 #[get("/init")]
@@ -297,7 +297,6 @@ async fn main() -> std::io::Result<()> {
     .bind(("0.0.0.0", 8000))?
     .run()
     .await
-    //TODO implement multi-threading
     //TODO implement logging 
     //TOOD implement error handling
     //TODO make /init a POST request and add a password

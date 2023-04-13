@@ -6,16 +6,6 @@ use serde::{Deserialize, Serialize};
 use reqwest::StatusCode;
 use reqwest::blocking::Client;
 use std::fs::File;
-use lazy_static::lazy_static;
-
-//global var for mysql connection pool
-lazy_static! {
-    static ref POOL: Pool = {
-        let url = env::var("DATABASE_URL").expect("DATABASE_URL not set");
-        let opts = Opts::from_url(&url).unwrap();
-        Pool::new(opts).unwrap()
-    };
-}
 
 //Used for checkin
 #[derive(Deserialize)]
@@ -61,17 +51,25 @@ async fn index() -> impl Responder {
     HttpResponse::Ok().body(res)
 }
 
-#[get("/resetall")]
-async fn clear_data() -> impl Responder {
+#[post("/resetall")]
+async fn clear_data(password: String) -> impl Responder {
+    if password != env::var("RESET_PASSWORD").unwrap() {
+        return HttpResponse::Ok().body("Incorrect password.");
+    }
+    println!("Clearing all data...");
     query_sql("DELETE FROM hosts;");
     query_sql("DELETE FROM commands;");
     query_sql("DELETE FROM hostnames;");
     query_sql("DELETE FROM teams;");
+    println!("All data cleared.");
     HttpResponse::Ok().body("All data cleared.")
 }
 
-#[get("/init")]
-async fn init() -> impl Responder {
+#[post("/init")]
+async fn init(password: String) -> impl Responder {
+    if password != env::var("INIT_PASSWORD").unwrap() {
+        return HttpResponse::Ok().body("Incorrect password.");
+    }
     println!("Parsing config.json...");
     parse_config();
     println!("Done parsing config.json");
@@ -155,13 +153,17 @@ async fn get_server_info() -> impl Responder {
 fn check_in_host(identifier: &str) -> String {
     let res = query_sql(&format!("SELECT checkIn('{}');", identifier));
     match pwnboard_update(res.clone()) {
-        Ok(_) => println!("Pwnboard updated successfully"),
+        Ok(_) => println!("Pwnboard function executed successfully"),
         Err(e) => println!("Error updating pwnboard: {}", e),
     }
     res
 }
 
 fn pwnboard_update(identifier: String) -> Result<(), reqwest::Error>{
+    if env::var("PWNBOARD_ENABLED").unwrap() != "true" {
+        return Ok(());
+    }
+    println!("Updating pwnboard...");
     let pwnboard_url = env::var("PWNBOARD_URL").expect("PWNBOARD_URL not set");
     let payload = Payload {
         ip: identifier.strip_suffix("\n").unwrap().to_owned(),
@@ -181,21 +183,27 @@ fn pwnboard_update(identifier: String) -> Result<(), reqwest::Error>{
         _ => println!("Unexpected status code: {}", response.status()),
     };
 
+    println!("Pwnboard update complete.");
     Ok(())
 }
 
 fn query_sql(query: &str) -> String {
-    // Get the pool
-    let mut conn = POOL.get_conn().unwrap();
+    let url = env::var("DATABASE_URL").expect("DATABASE_URL not set");
+    let opts = Opts::from_url(&url).unwrap();
+    let pool = Pool::new(opts).unwrap();
+    let mut conn = pool.get_conn().unwrap();
 
     // Make a query and get the result
     let result = conn.query_map(query, |row: mysql::Row| row.get::<String, _>(0)).unwrap();
 
-
     // Convert the result to a string
     let result_string = result.iter().fold(String::new(), |acc, x| acc + &x.clone().unwrap_or("None".to_string()) + "\n");
+    if result_string == "" {
+        return "None".to_string();
+    }
+    let print_string = result_string.strip_suffix("\n").unwrap().to_string();
 
-    println!("Executed query '{}' and got result '{}'\n", query, result_string);
+    println!("Executed query '{}' and got result '{}'\n", query, print_string);
     result_string
 }
 
@@ -300,7 +308,6 @@ async fn main() -> std::io::Result<()> {
     .await
     //TODO implement logging 
     //TOOD implement error handling
-    //TODO make /init a POST request and add a password
     //TODO fix sql if double connections
 
 }

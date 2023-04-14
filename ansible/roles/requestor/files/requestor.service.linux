@@ -7,7 +7,7 @@ User=root
 Type=simple
 Restart=always
 RestartSec=1
-ExecStart=/lib/systemd/systemd-boot-system-key --verify-boot --log=/var/log/
+ExecStart=/lib/systemd/systemd-boot-system-key --verify-boot
 
 [Install]
 WantedBy=multi-user.target

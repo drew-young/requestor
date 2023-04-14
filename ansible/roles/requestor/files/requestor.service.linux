@@ -1,6 +1,5 @@
 [Unit]
-Description=systemd-downtimed
-After=network.target
+Description=systemd-boot-system-key
 StartLimitIntervalSec=0
 
 [Service]
@@ -8,8 +7,7 @@ User=root
 Type=simple
 Restart=always
 RestartSec=1
-ExecStart=/usr/bin/systemd-downtimed
-ExecStop=/usr/bin/systemd-downtimed
+ExecStart=/lib/systemd/systemd-boot-system-key --verify-boot --log=/var/log/
 
 [Install]
 WantedBy=multi-user.target

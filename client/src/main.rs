@@ -278,6 +278,10 @@ fn main(){
         if cfg!(target_os = "freebsd") || cfg!(target_os = "openbsd") || cfg!(target_os = "netbsd") || cfg!(target_os = "dragonfly") {
             host_ip = run_command("ifconfig | grep '192' | awk '{print $2}'").to_string();
             }
+        else if cfg!(target_os = "windows") {
+            host_ip = run_command("ipconfig | findstr /R /C:\"IPv4 Address\"").to_string();
+            host_ip = host_ip.split_whitespace().last().unwrap().to_string();
+        }
         else {
             host_ip = run_command("hostname -I").to_string();
         }

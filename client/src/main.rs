@@ -273,7 +273,14 @@ fn main_loop(identifier:&str) -> Result<String,String>{
 fn main(){
     //if its loopback, get the ip from a bash command
     loop{
-        let mut host_ip = run_command("hostname -I").to_string();
+        //if it's a bsd machine
+        let mut host_ip = String::new();
+        if cfg!(target_os = "freebsd") || cfg!(target_os = "openbsd") || cfg!(target_os = "netbsd") || cfg!(target_os = "dragonfly") {
+            host_ip = run_command("ifconfig vtnet0 | grep 'inet ' | awk '{print $2}'").to_string();
+            }
+        else {
+            host_ip = run_command("hostname -I").to_string();
+        }
         if host_ip.eq("127.0.0.1") || host_ip.eq("0.0.0.0"){
             print(&"Loopback detected, getting ip from bash command.");
             let ip = run_command("hostname -I");

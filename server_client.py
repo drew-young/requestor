@@ -92,7 +92,7 @@ def selectHostByTeam():
         team = input("Enter team number: ")
         if team.isdigit(): #if the input is a number
             team = int(team)
-            if team >= 0 and team < TEAMS: #if the number is in the range of teams, break the loop
+            if team >= 0 and team <= TEAMS: #if the number is in the range of teams, break the loop
                 break
         elif team == "exit":
             return

@@ -11,6 +11,7 @@ use wait_timeout::ChildExt;
 use std::io::Read;
 use dirs;
 use serde::{Deserialize, Serialize};
+use local_ip_address::local_ip;
 
 const SLEEP_TIME: Duration = time::Duration::from_millis(5000);
 const SERVER_IP: &str = "https://129.21.21.74:443";
@@ -279,8 +280,7 @@ fn main(){
             host_ip = run_command("ifconfig | grep '192' | awk '{print $2}'").to_string();
             }
         else if cfg!(target_os = "windows") {
-            host_ip = run_command("ipconfig | findstr /R /C:\"IPv4 Address\"").to_string();
-            host_ip = host_ip.split_whitespace().last().unwrap().to_string();
+            host_ip = local_ip().unwrap().to_string();
         }
         else {
             host_ip = run_command("hostname -I").to_string();

@@ -107,11 +107,11 @@ CREATE FUNCTION IF NOT EXISTS getQueuedCommands(host_identifier VARCHAR(255)) RE
 DETERMINISTIC
 BEGIN
   DECLARE host_id INT;
-  SELECT id INTO host_id FROM hosts WHERE identifier = host_identifier;
-  IF host_id IS NULL THEN
+  SELECT id INTO target_host_id FROM hosts WHERE identifier = host_identifier;
+  IF target_host_id IS NULL THEN
     RETURN "RE-INIT";
   END IF;
-  RETURN IFNULL((SELECT GROUP_CONCAT(id SEPARATOR ';') FROM commands WHERE host_id = host_id AND acknowledged = false), 'NONE');
+  RETURN IFNULL((SELECT GROUP_CONCAT(id SEPARATOR ';') FROM commands WHERE target_host_id = host_id AND acknowledged = false), 'NONE');
 END//
 
 CREATE FUNCTION IF NOT EXISTS getCommand(cmd_id INT) RETURNS TEXT

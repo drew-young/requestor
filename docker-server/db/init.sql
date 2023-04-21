@@ -106,7 +106,7 @@ END //
 CREATE FUNCTION IF NOT EXISTS getQueuedCommands(host_identifier VARCHAR(255)) RETURNS TEXT
 DETERMINISTIC
 BEGIN
-  DECLARE host_id INT;
+  DECLARE target_host_id INT;
   SELECT id INTO target_host_id FROM hosts WHERE identifier = host_identifier;
   IF target_host_id IS NULL THEN
     RETURN "RE-INIT";

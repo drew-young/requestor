@@ -164,7 +164,15 @@ def mainLoop():
                     t = threading.Thread(target=sendAndReceive, args=(selected_host,command))
                     t.start()
         elif userIn == "3":
-            pass
+            selected_host = input("Enter host name: ")
+            if selected_host in HOSTS and selected_host != "exit":
+                while True:
+                    command = input(f"Enter command for {selected_host} (or exit): ")
+                    if command == "exit":
+                        break
+                    for i in range(TEAMS):
+                        t = threading.Thread(target=sendAndReceive, args=(selected_host + "." + str(i),command))
+                        t.start()
         elif userIn == "6":
             selected_host = input("Enter identifier: ")
             if selected_host and selected_host != "exit":

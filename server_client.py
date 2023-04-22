@@ -168,6 +168,8 @@ def mainLoop():
             if selected_host in HOSTS and selected_host != "exit":
                 while True:
                     command = input(f"Enter command for {selected_host} (or exit): ")
+                    if not command:
+                        continue
                     if command == "exit":
                         break
                     for i in range(1, TEAMS + 1):

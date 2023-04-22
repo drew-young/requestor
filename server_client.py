@@ -170,7 +170,7 @@ def mainLoop():
                     command = input(f"Enter command for {selected_host} (or exit): ")
                     if command == "exit":
                         break
-                    for i in range(TEAMS):
+                    for i in range(1, TEAMS + 1):
                         t = threading.Thread(target=sendAndReceive, args=(selected_host + "." + str(i),command))
                         t.start()
         elif userIn == "6":

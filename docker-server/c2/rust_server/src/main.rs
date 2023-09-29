@@ -108,6 +108,9 @@ async fn get_response_for_host(command_response: web::Json<CommandResponse>) -> 
 //For user to get command responses
 #[post("/responses")]
 async fn get_response_for_command(command: web::Json<CommandRequest>) -> Result<HttpResponse> {
+    if command.cmd_id == -1 {
+        return Ok(HttpResponse::Ok().body("No response found."));
+    }
     let res = query_sql(&format!("SELECT response FROM commands WHERE id = {};", command.cmd_id));
     if res == "" {
         return Ok(HttpResponse::Ok().body("No response found."));
@@ -194,14 +197,20 @@ fn query_sql(query: &str) -> String {
     let url = env::var("DATABASE_URL").expect("DATABASE_URL not set");
     let opts = Opts::from_url(&url).unwrap();
     let pool = Pool::new(opts).unwrap();
-    let mut conn = pool.get_conn().unwrap();
+    let mut conn = match pool.get_conn(){
+        Ok(conn) => conn,
+        Err(e) => {
+            println!("Error getting connection: {}", e);
+            return "None".to_string();
+        }
+    };
 
     // Make a query and get the result
     let result = match conn.query_map(query, |row: mysql::Row| row.get::<String, _>(0)) {
         Ok(result) => result,
         Err(e) => {
             println!("Error executing query '{}': {}", query, e);
-            return "None".to_string();
+            return "-1".to_string();
         }
     };
     

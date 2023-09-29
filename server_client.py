@@ -66,7 +66,7 @@ def init():
     Sets variables for server IP, list of hosts, and number of teams
     """
     global SERVER_IP
-    SERVER_IP = "https://129.21.21.74:443"
+    SERVER_IP = "https://c2.balls.agency:443"
     server_info = requests.post(f'{SERVER_IP}/api/getserverinfo', json={}, verify=False).text
     #expect Number of teams: {int} Hostnames: {list of hostnames separated by newlines}
     server_info = server_info.split("\n")

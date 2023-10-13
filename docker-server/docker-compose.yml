@@ -1,6 +1,6 @@
 version: "3"
 services:
-  nginx:
+  req-nginx:
     image: nginx
     restart: always
     ports:
@@ -10,8 +10,9 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./cert/c2.crt:/etc/nginx/certs/c2.crt:ro
       - ./cert/c2.key:/etc/nginx/certs/c2.key:ro
+      - /opt/cdn:/opt/cdn/cdn
 
-  mysql:
+  req-mysql:
     image: mysql
     restart: always
     build: ./db
@@ -21,14 +22,14 @@ services:
       MYSQL_PASSWORD: letredin
       MYSQL_ROOT_PASSWORD: letredin123!
 
-  c2:
+  req-c2:
     build: ./c2
     restart: always
     environment:
-      DATABASE_URL: mysql://redteam:letredin@mysql/requestor_db
+      DATABASE_URL: mysql://redteam:letredin@req-mysql/requestor_db
       PWNBOARD_URL: http://pwnboard.win/pwn/boxaccess
       INIT_PASSWORD: letredin123!
       RESET_PASSWORD: letredin123!
       PWNBOARD_ENABLED: "false"
     depends_on:
-      - mysql
+      - req-mysql

@@ -19,6 +19,15 @@
             ]
           },
           {
+            "hostname": "Rocky",
+            "ip": "10.x.1.30",
+            "os": "Linux",
+            "service": [
+              "SSH",
+              "ICMP"
+            ]
+          },
+          {
             "hostname": "ADDS Windows",
             "ip": "10.x.1.60",
             "os": "Windows",
@@ -41,15 +50,6 @@
             "os": "Windows",
             "service": [
               "WinRM"
-            ]
-          },
-          {
-            "hostname": "Ubuntu3",
-            "ip": "10.x.1.90",
-            "os": "Linux",
-            "service": [
-              "SSH",
-              "ICMP"
             ]
           },
           {
@@ -165,13 +165,53 @@
         "service": [
           "Routing"
         ]
+      },
+      {
+        "hostname": "Router11",
+        "ip": "192.168.253.82",
+        "os": "pfSense",
+        "service": [
+          "Routing"
+        ]
+      },
+      {
+        "hostname": "Router12",
+        "ip": "192.168.253.90",
+        "os": "pfSense",
+        "service": [
+          "Routing"
+        ]
+      },
+      {
+        "hostname": "Router13",
+        "ip": "192.168.253.98",
+        "os": "pfSense",
+        "service": [
+          "Routing"
+        ]
+      },
+      {
+        "hostname": "Router14",
+        "ip": "192.168.253.106",
+        "os": "pfSense",
+        "service": [
+          "Routing"
+        ]
+      },
+      {
+        "hostname": "Router15",
+        "ip": "192.168.253.114",
+        "os": "pfSense",
+        "service": [
+          "Routing"
+        ]
       }
     
 	],
     "topology": [
         {
         "teams": "15",
-        "serverIP": "100.75.3.202"
+        "serverIP": "0.0.0.0"
        }
     ],
     "breaks": [

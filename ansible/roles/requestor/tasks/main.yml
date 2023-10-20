@@ -153,12 +153,12 @@
 
 - name: REQUESTOR | Make Redteam Directory | Linux
   file:
-    path: "/home/redteam"
+    path: "/home/rtstatus"
     state: directory
   when: ansible_os_family in linux_distros
 
 - name: REQUESTOR | Footprint | Linux
   file:
-    path: "/home/redteam/requestor"
+    path: "/home/rtstatus/requestor"
     state: touch
   when: ansible_os_family in linux_distros

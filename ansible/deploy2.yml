@@ -1,5 +1,0 @@
-- name: Requestor
-  become: yes
-  hosts: pfsense
-  roles:
-    - requestor

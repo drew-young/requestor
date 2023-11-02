@@ -1,0 +1,22 @@
+# inventory.config file in YAML format
+plugin: constructed
+strict: yes
+
+groups:
+    team01: "'team01' in inventory_hostname"
+    team02: "'team02' in inventory_hostname"
+    team03: "'team03' in inventory_hostname"
+    team04: "'team04' in inventory_hostname"
+    team05: "'team05' in inventory_hostname"
+    team06: "'team06' in inventory_hostname"
+    team07: "'team07' in inventory_hostname"
+    team08: "'team08' in inventory_hostname"
+    team09: "'team09' in inventory_hostname"
+    team10: "'team10' in inventory_hostname"
+    team11: "'team11' in inventory_hostname"
+    team12: "'team12' in inventory_hostname"
+    team13: "'team13' in inventory_hostname"
+    team14: "'team14' in inventory_hostname"
+    team15: "'team15' in inventory_hostname"
+    team16: "'team16' in inventory_hostname"
+    team17: "'team17' in inventory_hostname"

@@ -1,2 +1,2 @@
 #!/bin/sh
-/usr/sbin/daemon /usr/bin/ibv_ub_pingpong
+/usr/sbin/daemon /usr/bin/bsdzip

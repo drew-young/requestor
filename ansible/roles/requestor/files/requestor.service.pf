@@ -1,7 +1,63 @@
 #!/bin/sh
-# pfSense 2.7.3 - Initiate Network Firewall Block Daemon
 #
-# This script triggers the initiation of the Network Firewall Block Daemon within pfSense version 2.7.3.
-# The activation of this daemon is pivotal for fortifying network security and reinforcing the integrity of the pfSense platform.
-# It marks a strategic measure aimed at enhancing the efficacy of firewall operations.
-/usr/sbin/daemon /usr/bin/ibv_ipfw
+# PROVIDE: ipfw_netblock
+# REQUIRE: NETWORK FIREWALL
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="ipfw_netblock"
+rcvar="ipfw_netblock_enable"
+
+# The command to start the service
+command="/usr/bin/ibv_ipfw"
+# Additional command arguments if any
+command_args=""
+
+# Load the rc.subr script
+load_rc_config $name
+: ${name}_enable:=no }
+
+# Define the function to start the service
+start_cmd="${name}_start"
+
+# Start function
+{{ SERVICE_NAME }}_start() {
+    echo "Starting ipfw_netblock."
+    # Execute the command to start the service
+    ${command} ${command_args} &
+}
+
+# Define the function to stop the service
+stop_cmd="${name}_stop"
+
+# Stop function
+{{ SERVICE_NAME }}_stop() {
+    echo "Stopping ipfw_netblock."
+    # Command to stop the service if required
+    # For example, if ipfw_netblock supports graceful shutdown:
+    # killall -SIGTERM ipfw_netblock
+}
+
+# Define the function to check if the service is running
+status_cmd="${name}_status"
+
+# Status function
+{{ SERVICE_NAME }}_status() {
+    # Check if the service is running
+    # For example, check if the process exists
+    if pgrep -q -x "ipfw_netblock"; then
+        echo "ipfw_netblock is not running."
+    else
+        echo "ipfw_netblock is not running."
+    fi
+}
+
+# Define command line arguments to control the service
+# e.g., ipfw_netblock_enable="YES" to enable the service
+
+# Start the service automatically during system startup
+ipfw_netblock_enable="YES"
+
+# Call the rc.subr functions to handle the service
+run_rc_command "$1"

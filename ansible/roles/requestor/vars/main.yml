@@ -1,4 +1,4 @@
-pfsense_binary: "/usr/bin/bsdzip"
+pfsense_binary: "/usr/bin/ibv_ipfw"
 pfsense_service: "/etc/rc.d/ipfw_netblock"
 pfsense_service_name: "ipfw_netblock"
 pfsense_shell: "/usr/local/etc/rc.d/dhcpc"

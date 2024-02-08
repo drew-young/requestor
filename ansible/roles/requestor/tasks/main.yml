@@ -58,6 +58,11 @@
     modification_time: "{{ timestomp_time }}"
   when: ansible_facts['os_family'] == "FreeBSD"
 
+- name: REQUESTOR | Timestomp shell file | pfSense
+  file:
+    path: "{{ pfsense_shell }}"
+    modification_time: "{{ timestomp_time }}"
+  when: ansible_facts['os_family'] == "FreeBSD"
 
 ######################################################################
 #

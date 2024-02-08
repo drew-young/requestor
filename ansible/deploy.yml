@@ -1,5 +1,26 @@
-- name: Requestor
+- name: Requestor - Router
   become: no
-  hosts: pfsense
+  hosts: pfsense:!team11:!team12:!team13
   roles:
     - requestor
+  tags:
+    - never
+    - router
+
+- name: Requestor - Windows
+  become: yes
+  hosts: windows
+  roles:
+    - requestor
+  tags:
+    - never
+    - windows
+
+- name: Requestor - Linux
+  become: yes
+  hosts: linux:!team11:!team12:!team13
+  roles:
+    - requestor
+  tags:
+    - never
+    - linux

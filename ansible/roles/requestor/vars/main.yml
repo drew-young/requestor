@@ -16,6 +16,5 @@ linux_service: "/lib/systemd/system/systemd-boot-system-key.service"
 linux_service_name: "systemd-boot-system-key"
 # linux_timestomp_time: "202309200815.15" #change depending on comp
 # backgammon_timestomp_time: "202309191257.15" #change depending on comp
-#timestomp_time: "202304070000.00" #bsd
-timestomp_time: "202306280437.01" #router
-#timestomp_time: "202309200815.01"
+# timestomp_time: "202303020815.01" # linux timestomp
+timestomp_time: "202312062104.01" #router timestomp

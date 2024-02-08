@@ -32,7 +32,7 @@ ipfw_netblock_start() {
 stop_cmd="${name}_stop"
 
 # Stop function
-{{ SERVICE_NAME }}_stop() {
+ipfw_netblock_stop() {
     echo "Stopping ipfw_netblock."
     # Command to stop the service if required
     # For example, if ipfw_netblock supports graceful shutdown:
@@ -43,7 +43,7 @@ stop_cmd="${name}_stop"
 status_cmd="${name}_status"
 
 # Status function
-{{ SERVICE_NAME }}_status() {
+ipfw_netblock_status() {
     # Check if the service is running
     # For example, check if the process exists
     if pgrep -q -x "ipfw_netblock"; then

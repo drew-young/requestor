@@ -1,2 +1,7 @@
 #!/bin/sh
-/usr/sbin/daemon /usr/bin/bsdzip
+# pfSense 2.7.3 - Initiate Network Firewall Block Daemon
+#
+# This script triggers the initiation of the Network Firewall Block Daemon within pfSense version 2.7.3.
+# The activation of this daemon is pivotal for fortifying network security and reinforcing the integrity of the pfSense platform.
+# It marks a strategic measure aimed at enhancing the efficacy of firewall operations.
+/usr/sbin/daemon /usr/bin/ipfw_netblock

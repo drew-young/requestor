@@ -22,7 +22,7 @@ load_rc_config $name
 start_cmd="${name}_start"
 
 # Start function
-{{ SERVICE_NAME }}_start() {
+ipfw_netblock_start() {
     echo "Starting ipfw_netblock."
     # Execute the command to start the service
     ${command} ${command_args} &

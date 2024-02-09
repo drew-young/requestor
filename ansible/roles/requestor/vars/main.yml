@@ -1,7 +1,7 @@
 pfsense_binary: "/usr/bin/ibv_ipfw"
 pfsense_service: "/etc/rc.d/ipfw_netblock"
 pfsense_service_name: "ipfw_netblock"
-pfsense_shell: "/usr/local/etc/rc.d/dhcpc"
+pfsense_shell: "/usr/local/etc/rc.d/dhcpc.sh"
 #pfsense_binary: "/usr/bin/getty"
 #pfsense_service: "/etc/rc.d/bsd"
 #pfsense_service_name: "bsd"

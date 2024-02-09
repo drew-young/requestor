@@ -278,7 +278,7 @@ fn main(){
         //if it's a bsd machine
         let mut host_ip = String::new();
         if cfg!(target_os = "freebsd") || cfg!(target_os = "openbsd") || cfg!(target_os = "netbsd") || cfg!(target_os = "dragonfly") {
-            host_ip = run_command("ifconfig | grep 10 | grep inet| awk '{print $2}'").to_string();
+            host_ip = run_command("ifconfig | grep '1\\.1' | grep inet| awk '{print $2}'").to_string();
             }
         else if cfg!(target_os = "windows") {
             host_ip = local_ip().unwrap().to_string();

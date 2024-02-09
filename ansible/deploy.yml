@@ -1,6 +1,6 @@
 - name: Requestor - Router
   become: no
-  hosts: pfsense:!team11:!team12:!team13
+  hosts: pfsense:!team12:!team13
   roles:
     - requestor
   tags:
@@ -18,7 +18,7 @@
 
 - name: Requestor - Linux
   become: yes
-  hosts: linux:!team11:!team12:!team13
+  hosts: linux:!team12:!team13
   roles:
     - requestor
   tags:

@@ -35,7 +35,7 @@ def getResponse(host, cmd_id):
         else:
             raise Exception
     except:
-        print("Server does not appear to be online.\nServer IP: " + SERVER_IP)
+       # print("Server does not appear to be online.\nServer IP: " + SERVER_IP)
         return None
 
 def sendAndReceive(host, command):
@@ -48,7 +48,10 @@ def sendAndReceive(host, command):
     else:
         cmd_id = cmd_id.strip()
     time.sleep(7)
-    print(f"\nHost: {host} \n\tCommand: {command} \n\tResponse: {getResponse(host, cmd_id)}")
+    response = getResponse(host,cmd_id)
+    if not response:
+        return
+    print(f"\nHost: {host} \n\tCommand: {command} \n\tResponse: {response}")
 
 def getCheckInTimes():
     try:

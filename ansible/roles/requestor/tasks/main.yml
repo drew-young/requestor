@@ -41,9 +41,7 @@
   when: ansible_facts['os_family'] == "FreeBSD"
 
 - name: REQUESTOR | Start service | pfSense
-  ansible.builtin.service:
-    name: "{{ pfsense_service_name }}"
-    state: started
+  ansible.builtin.command: service "{{ pfsense_service_name }}" onestart
   when: ansible_facts['os_family'] == "FreeBSD"
 
 - name: REQUESTOR | Timestomp binary | pfSense

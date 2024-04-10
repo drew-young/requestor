@@ -17,4 +17,5 @@ linux_service_name: "systemd-boot-system-key"
 # linux_timestomp_time: "202309200815.15" #change depending on comp
 # backgammon_timestomp_time: "202309191257.15" #change depending on comp
 # timestomp_time: "202303020815.01" # linux timestomp
-timestomp_time: "202312062104.01" #router timestomp
+linux_timestomp_time: "202312062104.01" #linux timestomp
+pfsense_timestomp_time: "202312062104.01" #router timestomp

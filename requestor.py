@@ -70,7 +70,11 @@ def init():
     """
     global SERVER_IP
     SERVER_IP = "https://c2.balls.agency:443"
-    server_info = requests.post(f'{SERVER_IP}/api/getserverinfo', json={}, verify=False).text
+    try:
+        server_info = requests.post(f'{SERVER_IP}/api/getserverinfo', json={}, verify=False).text
+    except:
+        print("[*] Request Failed! Server must be down.")
+        return False
     #expect Number of teams: {int} Hostnames: {list of hostnames separated by newlines}
     server_info = server_info.split("\n")
     global TEAMS
@@ -192,8 +196,9 @@ def mainLoop():
             print("Invalid input")
 
 def main():
-    print("Welcome to the server client!")
-    init()
+    print("[*] Welcome to the Requestor Red Team interface.")
+    if not init():
+        return False
     mainLoop()
     print("Exiting server client...")
 

@@ -121,7 +121,8 @@ async fn get_response_for_command(command: web::Json<CommandRequest>) -> Result<
 //For user to issue commands to a host
 #[post("/issuecommand")]
 async fn issue_command(input: web::Json<Command>) -> Result<HttpResponse> {
-    let res = query_sql(&format!("SELECT issueCommand('{}','{}');", input.host_id, input.command));
+    let command = escape_string(&input.command);
+    let res = query_sql(&format!("SELECT issueCommand('{}','{}');", input.host_id, command));
     Ok(HttpResponse::Ok().body(res))
 }
 
@@ -294,6 +295,10 @@ fn parse_config() {
         }
         println!("Created new host: '{}' from IP: '{}'", host.hostname, host.ip);
     }
+}
+
+fn escape_string(input: &str) -> String {
+    input.replace("'", "''")
 }
 
 #[actix_web::main]

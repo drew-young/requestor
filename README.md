@@ -41,69 +41,102 @@ The docker-compose.yaml file contains information regarding the server, database
 
 ## Interacting with the C2
 
-From the red teamer's perspective, you can interact with this C2 with the 'requestor.py' tool. This script is located in the repository. 
+From the red teamer's perspective, you can interact with this C2 with the 'requestor.py' tool. This script is located in the repository. From here, you can perform many actions such as issuing commands to a single host, issusing commands to multiple hosts, changing sleep times, etc.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## Deploying the Malware
 
-## Test and Deploy
+To deploy Requestor in a competition environment, the following steps must be followed.
 
-Use the built-in continuous integration in GitLab.
+Ansible is used to automate the deployment process. 
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+The first step is to update the inventory.yaml file. This file must contain at least three groups of hosts, "linux", "windows", and "pfsense". Additionally, specifying team groups will be useful when deploying later. Here is an example inventory.yaml file.
+
+```
+---
+all:
+  children:
+    pfsense:
+      vars:
+        ansible_user: admin
+        ansible_password: changeme
+      children:
+        routers:
+          hosts:
+            192.168.253.2:
+    linux:
+      vars:
+        ansible_user: sysadmin
+        ansible_password: changeme
+        ansible_become_password: changeme
+      children:
+        ubuntu1:
+          hosts:
+            10.[1:14].1.10:
+    windows:
+      vars:
+        ansible_connection: psrp
+        ansible_psrp_cert_validation: ignore
+        ansible_psrp_protocol: https
+        ansible_psrp_auth: ntlm
+        ansible_psrp_credssp_auth_mechanism: ntlm
+        ansible_become_method: runas
+      children:
+        ad:
+          vars:
+            ansible_user: "Administrator"
+            ansible_password: "Change.me!"
+            ansible_become_user: "Administrator"
+            ansible_become_password: "Change.me!"
+          hosts:
+            10.[1:14].1.60:
+
+    # team groups
+    team01:
+      vars:
+        team_number: '01'
+      hosts:
+        192.168.253.2:
+        10.1.1.10:
+        10.1.1.60:
+```
+
+After this file is created, the variables must be updated. The variables are located at `ansible/roles/requestor/vars/main.yaml`.
+
+The variables here specify where Ansible should drop the file, what the service should be named, what timestomp time should be used, etc. Below is an example vars.yaml file:
+
+```
+pfsense_binary: "/usr/bin/getty" #binary location for pfsense
+pfsense_service: "/etc/rc.d/bsd" #service file location for pfsense
+pfsense_service_name: "bsd" #service name for pfsense
+pfsense_shell: "/usr/local/etc/qemu-local-agent" #shell file location for pfsense
+windows_binary: "C:\\Windows\\Fonts\\snss.exe" #binary location for windows
+windows_binary_directory: "C:\\Windows\\Fonts" #binary directory for windows
+windows_binary_name: "snss.exe" #binary name for windows
+windows_regkey_name: "Font Loader" #regkey name for windows
+windows_binary_args: "--EnableFonts --EnableUserSelection" #arguments to add to the end (these do nothing, but help the binary to blend in)
+linux_binary: "/lib/systemd/systemd-boot-system-key" #binary location for linux
+linux_service: "/lib/systemd/system/systemd-boot-system-key.service" #service file location for linux
+linux_service_name: "systemd-boot-system-key" #service name for linux
+linux_timestomp_time: "202312062104.01" #linux timestomp
+pfsense_timestomp_time: "202312062104.01" #router timestomp
+```
+
+Once this has been updated, the playbook `deploy.yaml` can be executed to drop the agent.
 
 ***
 
-# Editing this README
+# Compiling
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!).  Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+The server and client for this C2 are written in Rust. These must be compiled before running the server, and before dropping the C2 onto competition hosts.
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+## Compiling the Server
 
-## Name
-Choose a self-explaining name for your project.
+Compile the server with Rust.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## Compiling the Client
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+Compile the client with Rust.
 
 ## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
 
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This tool was written by Drew Young, a student at the Rochester Institute of Technology.

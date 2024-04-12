@@ -85,6 +85,7 @@ def init():
     for host in HOSTS:
         if host == "":
             HOSTS.remove(host)
+    return True
 
 
 #todo function that checks to see if all hosts are active and prints out which hosts are down

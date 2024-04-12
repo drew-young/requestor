@@ -137,6 +137,20 @@ Compile the server with Rust.
 
 Compile the client with Rust.
 
+***
+
+# How Requestor Works
+
+The client reaches out to the server via HTTPS to get commands to run, then responds back with the output of the command.
+
+## Client
+
+When the client is run, the first thing it does is attempts to get the IP of the host it is on based on the OS. Once this is achieved, the client reaches out to the server at `/hosts/newhost`. The server will then reply to the client with the client's identifier. This identifier will be used by the client every time it requests commands to run. This identifier is also used by the red teamer to issue commands to the client. After getting this identifier, the client will reach out to the server at `/hosts/commands`. The server will reply with the ID of each command that is queued to be run. The client will then reach out to `/hosts/getcommand` via a POST request with the command ID to be run. The server will reply with the command. The client will then execute the command and reply to the server at `/hosts/response` with the ID of the command and the response. The client will then wait it's designated sleep time and repeat this loop.
+
+## Server
+
+The server interacts with the MySQL database to issue commands, update check-in times, receive responses, etc. 
+
 ## Authors and acknowledgment
 
 This tool was written by Drew Young, a student at the Rochester Institute of Technology.

